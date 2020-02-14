@@ -11,3 +11,8 @@ How to run:
 
 * Run `./completeCMD.sh`to intialize bootloader and system image. The kernel will automatically load, but you can quit.
 * Run `./compileApp.sh` to compile app.c and put it into the OS's system image, and the program will automatically load.
+
+Bonus:
+
+* Boot logo
+* External program "app" which is basicaly a simple love meter.
