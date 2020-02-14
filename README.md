@@ -1,1 +1,3 @@
-# K2-OS-7
+# Operating System
+
+This repo contains files to fulfill task given in course IF2230 (Sistem Operasi/Operating System) at Institut Teknologi Bandung
