@@ -45,12 +45,8 @@ void main()
 
   // EKSEKUSI PROGRAM
   // executeProgram("app", 0x2000, success);
-  // if(success){
-  //   printString("Program berhasil dijalankan...");
-  // } else {
-  //   printString("Gagal cuk");
-  // }
-  executeProgram("app", 0x2000, success);
+  executeProgram("shell", 0x2000, success);
+
 
   // readFile(lol, "key.txt", &status);
   // printString(lol);
@@ -77,8 +73,8 @@ void main()
   //   printString("Tidak ada file dengan nama tersebut.");
   // }
 
-  while (1)
-    ;
+  while (1);
+
 }
 
 void handleInterrupt21 (int AX, int BX, int CX, int DX) {
