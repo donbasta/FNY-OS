@@ -4,13 +4,13 @@ void printString(char *string);
 void readString(char *string);
 void readSector(char *buffer, int sector);
 void writeSector(char *buffer, int sector);
-void readFile(char *buffer, char *filename, int *success);
+void readFile(char *buffer, char *path, int *result, char parentIndex);
 void clear(char *buffer, int length);
-void writeFile(char *buffer, char *filename, int *sectors);
+void writeFile(char *buffer, char *path, int *sectors, char parentIndex);
 void executeProgram(char *filename, int segment, int *success);
 
 char map[512];
-char dir[512];
+char dir[512 * 2];
 char freeSector[512];
 
 void main()
@@ -77,35 +77,37 @@ void main()
 
 }
 
-void handleInterrupt21(int AX, int BX, int CX, int DX)
-{
-  switch (AX)
-  {
-  case 0x0:
-    printString(BX);
-    break;
-  case 0x1:
-    readString(BX);
-    break;
-  case 0x2:
-    readSector(BX, CX);
-    break;
-  case 0x3:
-    writeSector(BX, CX);
-    break;
-  case 0x4:
-    readFile(BX, CX, DX);
-    break;
-  case 0x5:
-    writeFile(BX, CX, DX);
-    break;
-  case 0x6:
-    executeProgram(BX, CX, DX);
-    break;
-  default:
-    printString("Invalid interrupt");
-  }
+void handleInterrupt21 (int AX, int BX, int CX, int DX) {
+   char AL, AH;
+   AL = (char) (AX);
+   AH = (char) (AX >> 8);
+   switch (AL) {
+      case 0x00:
+         printString(BX);
+         break;
+      case 0x01:
+         readString(BX);
+         break;
+      case 0x02:
+         readSector(BX, CX);
+         break;
+      case 0x03:
+         writeSector(BX, CX);
+         break;
+      case 0x04:
+         readFile(BX, CX, DX, AH);
+         break;
+      case 0x05:
+         writeFile(BX, CX, DX, AH);
+         break;
+      case 0x06:
+         executeProgram(BX, CX, DX);
+         break;
+      default:
+         printString("Invalid interrupt");
+   }
 }
+
 
 void printString(char *string)
 {
@@ -181,89 +183,246 @@ void writeSector(char *buffer, int sector)
 }
 
 //The comment follows from the flowchart in the task specification (milestone 1)
-void writeFile(char *buffer, char *filename, int *sectors)
-{
+// void writeFile(char *buffer, char *path, int *sectors, char parentIndex)
+// {
 
+//   int entryFile;
+//   int i, j, k;
+//   int numSectors;
+
+//   //Baca sektor map dan dir
+//   readSector(map, 1);
+//   readSector(dir, 2);
+//   readSector(dir + 512, 3);
+
+//   //cek dir yang kosong
+//   for (i = 0; i < 16 * 2; i++)
+//   { //cek tiap baris di dir
+//     if (dir[i * 32 + 2] == 0x0)
+//     { //jika ada baris yang kosong
+//       entryFile = i;
+//       break;
+//     }
+//   }
+
+//   //Cek Jumlah sektor di map apakah cukup untuk buffer file
+//   j = 0;
+//   for (i = 0; i < 512; i++)
+//   {
+//     if (map[i] == 0x0)
+//     {
+//       freeSector[j++] = i;
+//     }
+//   }
+
+//   k = 0;
+//   i = 0;
+//   while (buffer[k] != 0x00)
+//   {
+//     i++;
+//     k += 512;
+//   }
+//   //sekarang j menyimpan banyak sektor yang kosong.
+//   //Comparing apakah freesector cukup.
+//   if (i > j)
+//   {
+//     *sectors = 0;
+//     printString("Alokasi gagal!!!\n");
+//   }
+//   else
+//   {
+//     //Isi sektor pada dir dengan nama file
+//     for (j = 0; path[j] != 0x0 && j < 12; j++)
+//     {
+//       dir[entryFile * 32 + j] = path[j];
+//     }
+//     for (; j < 12; j++)
+//     { //pad the remaining place with 0
+//       dir[entryFile * 32 + j] = 0x0;
+//     }
+
+//     //Cari sektor di map yang kosong
+//     //Isi sektor tersebut dengan byte pada file buffer dan tandai di map
+//     //Bersihkan sektor yang akan digunakan untuk menyimpan nama file
+//     j = 0; //j bakal menyimpan banyak sektor yang diperlukan
+//     i = 0;
+//     while (buffer[i] != 0x00)
+//     {
+//       map[freeSector[j]] = 0xff;
+//       dir[entryFile * 32 + j + 12] = freeSector[j];
+//       writeSector(buffer + i, freeSector[j]);
+//       j++;
+//       i = i + 512;
+//     }
+
+//     *sectors = j;
+//     for (; j < 20; j++)
+//     {
+//       dir[entryFile * 32 + j + 12] = 0x00; //pad remaining with zeroes
+//     }
+
+//     writeSector(map, 1);
+//     writeSector(dir, 2);
+//   }
+// }
+
+void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
+  char map[512];
+  char files[512 * 2];
+  char sectors[512];
+
+  int i,j,k;
+  int entryIndex;
   int entryFile;
-  int i, j, k;
-  int numSectors;
+  
+  char idxParent;
 
-  //Baca sektor map dan dir
   readSector(map, 1);
-  readSector(dir, 2);
+  readSector(files, 2);
+  readSector(files + 512, 3);
+  readSector(sectors, 4);
 
-  //cek dir yang kosong
-  for (i = 0; i < 16; i++)
-  { //cek tiap baris di dir
-    if (dir[i * 32] == 0x0)
-    { //jika ada baris yang kosong
+  char parent[14];
+  char filename[14];
+  for(i = 0;i<14;i++){
+    parent[i] = 0x0;
+    filename[i] = 0x0;
+  }
+  
+  // mengambil current file name dan current parent name
+  j = 0;
+  for(i = 0 ;i < sizeof(path); i++){
+    if(path[i] != '/'){
+      filename[j++] = path[i];
+    }else{
+      for(; j < 14; j++){
+        filename[j] = 0x0;
+      }
+      j = 0;
+      for(k = 0;k<14;k++){
+        parent[k] = filename[k];
+      }
+    }
+  }
+  // pad with 0
+  for(;j<14;j++){
+    filename[j] = 0x0;
+  }
+
+  // mencari index parent
+  idxParent = parentIndex;
+  if(parent[0] != 0x0){
+    for(i = 0;i<64;i++){
+      if(files[i*16 + 1] == 0xFF){
+        int beda = 0;
+        for(j = 0;j<14;j++){
+          if(files[i*16 + 2 + j] != parent[j]){
+            beda = 1;
+            break;
+          }
+        }
+        if(beda){
+          continue;
+        }
+        idxParent = files[i*16];
+      }
+    }
+  }
+
+  // mencari apakah ada file yang sama
+  int sama = 0;
+  for(i = 0;i<64;i++){
+    if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
+      int beda = 0;
+      for(j = 0;j<14;j++){
+        if(files[i*16 + 2 + j] != filename[j]){
+          beda = 1;
+          break;
+        }
+      }
+      if(beda) continue;
+
+      sama = 1;
+      break;
+    }
+  }
+
+  if(sama){
+    printString("File sudah ada!\n");
+    return;
+  }
+
+  // mencari sector index yang kosong
+  for(i = 0;i<32;i++){
+    if(sectors[i*16]==0x0){
+      entryIndex = i;
+      break;
+    }
+  }
+
+  // cek apakah terdapat entri yang masih kosong
+  for(i = 0;i<64;i++){
+    if(files[i*16 + 2] == 0x0){
       entryFile = i;
       break;
     }
   }
 
-  //Cek Jumlah sektor di map apakah cukup untuk buffer file
+  // cek sector yang masih kosong
   j = 0;
-  for (i = 0; i < 512; i++)
-  {
-    if (map[i] == 0x0)
-    {
+  for(i = 0;i<512;i++){
+    if(map[i] == 0x0){
       freeSector[j++] = i;
     }
   }
 
+  // sector yang dibutuhkan oleh buffer
+
   k = 0;
   i = 0;
-  while (buffer[k] != 0x00)
-  {
+  while(buffer[k] != 0x0){
     i++;
-    k += 512;
+    k+=512;
   }
-  //sekarang j menyimpan banyak sektor yang kosong.
-  //Comparing apakah freesector cukup.
-  if (i > j)
-  {
+
+  if(i > j){
     *sectors = 0;
-    printString("Alokasi gagal!!!\n");
+    printString("Alokasi gagal!!\n");
+    return;
   }
-  else
-  {
-    //Isi sektor pada dir dengan nama file
-    for (j = 0; filename[j] != 0x0 && j < 12; j++)
-    {
-      dir[entryFile * 32 + j] = filename[j];
-    }
-    for (; j < 12; j++)
-    { //pad the remaining place with 0
-      dir[entryFile * 32 + j] = 0x0;
-    }
 
-    //Cari sektor di map yang kosong
-    //Isi sektor tersebut dengan byte pada file buffer dan tandai di map
-    //Bersihkan sektor yang akan digunakan untuk menyimpan nama file
-    j = 0; //j bakal menyimpan banyak sektor yang diperlukan
-    i = 0;
-    while (buffer[i] != 0x00)
-    {
-      map[freeSector[j]] = 0xff;
-      dir[entryFile * 32 + j + 12] = freeSector[j];
-      writeSector(buffer + i, freeSector[j]);
-      j++;
-      i = i + 512;
-    }
+  files[entryFile*16] = idxParent;
+  files[entryFile*16 + 1] = entryIndex;
 
-    *sectors = j;
-    for (; j < 20; j++)
-    {
-      dir[entryFile * 32 + j + 12] = 0x00; //pad remaining with zeroes
-    }
-
-    writeSector(map, 1);
-    writeSector(dir, 2);
+  for(i = 0; i<14;i++){
+    files[entryFile*16 + 2 + i] = filename[j];
   }
+
+  // mengisi sector yang kosong pada sectors dengan indeks entryIndex;
+  j = 0;
+  i = 0;
+  while(buffer[i] != 0x0){
+    map[freeSector[j]] = 0xFF;
+    sectors[entryIndex*16 + j] = freeSector[j];
+    writeSector(buffer + i, freeSector[j]);
+    j++;
+    i += 512;
+  }
+
+  *sectors = j;
+
+  // pad with 0
+  for(; j<16;j++){
+    sectors[entryIndex*16 + j] = 0x0;
+  }
+
+  writeSector(map, 1);
+  writeSector(files, 2);
+  writeSector(files + 512, 3);
+  writeSector(sectors, 4);
 }
 
-void readFile(char *buffer, char *filename, int *success)
+void readFile(char *buffer, char *path, int *result, char parentIndex)
 {
 
   char map[512];
@@ -292,15 +451,15 @@ void readFile(char *buffer, char *filename, int *success)
     {
       cur[j] = dir[i * 32 + j];
     }
-    for (j = 0; j < 12 && filename[j] != 0x0; j++)
+    for (j = 0; j < 12 && path[j] != 0x0; j++)
     {
-      if (cur[j] != filename[j])
+      if (cur[j] != path[j])
       {
         sama = 0;
         break;
       }
     }
-    if (filename[j] == 0x0 && cur[j] != 0x0)
+    if (path[j] == 0x0 && cur[j] != 0x0)
     {
       sama = 0;
     }
@@ -316,7 +475,7 @@ void readFile(char *buffer, char *filename, int *success)
   // jika tidak ada, success <- false, keluar
   if (!cek)
   {
-    *success = 0;
+    *result = 0;
     printString("Tidak ada file yang memenuhi\n\r");
     return;
   }
@@ -338,7 +497,7 @@ void readFile(char *buffer, char *filename, int *success)
     cnt = cnt + 512;
   }
 
-  *success = 1;
+  *result = 1;
   printString("File berhasil dimuat!!\n\r");
   return;
 }
