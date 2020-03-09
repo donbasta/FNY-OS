@@ -426,74 +426,179 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   writeSector(sectors, 4);
 }
 
-void readFile(char *buffer, char *path, int *result, char parentIndex)
-{
+// void readFile(char *buffer, char *path, int *result, char parentIndex)
+// {
 
+//   char map[512];
+//   char dir[512];
+//   char freeSector[512];
+
+//   int i, j, cek;
+//   int sect;
+//   int cnt;
+//   int entryFile;
+//   char cur[12];
+//   int sama;
+
+//   // Baca sektor dir
+//   readSector(dir, 2);
+
+//   // iterate pada array dir, cek apakah nama file sesuai
+//   cek = 0; // ada nama filenya ga
+//   for (i = 0; i < 16; i++)
+//   {
+//     sama = 1;
+//     if (dir[i * 32] == 0x0)
+//       continue;
+
+//     for (j = 0; j < 12; j++)
+//     {
+//       cur[j] = dir[i * 32 + j];
+//     }
+//     for (j = 0; j < 12 && path[j] != 0x0; j++)
+//     {
+//       if (cur[j] != path[j])
+//       {
+//         sama = 0;
+//         break;
+//       }
+//     }
+//     if (path[j] == 0x0 && cur[j] != 0x0)
+//     {
+//       sama = 0;
+//     }
+//     // printString(cur);
+//     if (sama)
+//     {
+//       cek = 1;
+//       entryFile = i;
+//       break;
+//     }
+//   }
+
+//   // jika tidak ada, success <- false, keluar
+//   if (!cek)
+//   {
+//     *result = 0;
+//     printString("Tidak ada file yang memenuhi\n\r");
+//     return;
+//   }
+
+//   // jika ada, inisialisasi no_sektor <- dir[entry*32+12] (isi file)
+//   cnt = 0;
+
+//   // while no_sektor != 0, baca ke buffer dan lanjutkan next hingga no_sektor == 0
+//   for (j = 12; j < 32; j++)
+//   {
+//     sect = dir[entryFile * 32 + j];
+
+//     if (sect == 0)
+//     {
+//       break;
+//     }
+
+//     readSector(buffer + cnt, sect);
+//     cnt = cnt + 512;
+//   }
+
+//   *result = 1;
+//   printString("File berhasil dimuat!!\n\r");
+//   return;
+// }
+
+void readFile(char *buffer, char *path, int *result, char parentIndex){
   char map[512];
-  char dir[512];
-  char freeSector[512];
+  char files[512 * 2];
+  char sectors[512];
 
-  int i, j, cek;
-  int sect;
+  int i,j;
   int cnt;
-  int entryFile;
-  char cur[12];
-  int sama;
+  int sect;
+  int entryIndex;
+  int idxParent;
 
-  // Baca sektor dir
-  readSector(dir, 2);
+  readSector(files, 2);
+  readSector(files + 512, 3);
+  readSector(sectors, 4);
 
-  // iterate pada array dir, cek apakah nama file sesuai
-  cek = 0; // ada nama filenya ga
-  for (i = 0; i < 16; i++)
-  {
-    sama = 1;
-    if (dir[i * 32] == 0x0)
-      continue;
-
-    for (j = 0; j < 12; j++)
-    {
-      cur[j] = dir[i * 32 + j];
-    }
-    for (j = 0; j < 12 && path[j] != 0x0; j++)
-    {
-      if (cur[j] != path[j])
-      {
-        sama = 0;
-        break;
+  char parent[14];
+  char filename[14];
+  for(i = 0;i<14;i++){
+    parent[i] = 0x0;
+    filename[i] = 0x0;
+  }
+  
+  // mengambil current file name dan current parent name
+  j = 0;
+  for(i = 0 ;i < sizeof(path); i++){
+    if(path[i] != '/'){
+      filename[j++] = path[i];
+    }else{
+      for(; j < 14; j++){
+        filename[j] = 0x0;
+      }
+      j = 0;
+      for(k = 0;k<14;k++){
+        parent[k] = filename[k];
       }
     }
-    if (path[j] == 0x0 && cur[j] != 0x0)
-    {
-      sama = 0;
+  }
+  // pad with 0
+  for(;j<14;j++){
+    filename[j] = 0x0;
+  }
+
+  // mencari index parent
+  idxParent = parentIndex;
+  if(parent[0] != 0x0){
+    for(i = 0;i<64;i++){
+      if(files[i*16 + 1] == 0xFF){
+        int beda = 0;
+        for(j = 0;j<14;j++){
+          if(files[i*16 + 2 + j] != parent[j]){
+            beda = 1;
+            break;
+          }
+        }
+        if(beda){
+          continue;
+        }
+        idxParent = files[i*16];
+      }
     }
-    // printString(cur);
-    if (sama)
-    {
-      cek = 1;
-      entryFile = i;
+  }
+
+  // mencari apakah ada file yang sama
+  int sama = 0;
+  for(i = 0;i<64;i++){
+    if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
+      int beda = 0;
+      for(j = 0;j<14;j++){
+        if(files[i*16 + 2 + j] != filename[j]){
+          beda = 1;
+          break;
+        }
+      }
+      if(beda) continue;
+
+      sama = 1;
+      entryIndex = files[i*16 + 1];
       break;
     }
   }
 
-  // jika tidak ada, success <- false, keluar
-  if (!cek)
-  {
+  if(!sama){
     *result = 0;
-    printString("Tidak ada file yang memenuhi\n\r");
+    printString("Tidak ada file yang memenuhi!\n");
     return;
   }
 
-  // jika ada, inisialisasi no_sektor <- dir[entry*32+12] (isi file)
   cnt = 0;
 
-  // while no_sektor != 0, baca ke buffer dan lanjutkan next hingga no_sektor == 0
-  for (j = 12; j < 32; j++)
-  {
-    sect = dir[entryFile * 32 + j];
+  for(i = 0;i<16;i++){
+    sect = sectors[entryIndex*16 + i];
 
-    if (sect == 0)
-    {
+    if(sect == 0){
       break;
     }
 
@@ -502,8 +607,7 @@ void readFile(char *buffer, char *path, int *result, char parentIndex)
   }
 
   *result = 1;
-  printString("File berhasil dimuat!!\n\r");
-  return;
+  printString("File berhasil dimuat!\n");
 }
 
 void clear(char *buffer, int length)

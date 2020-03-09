@@ -35,6 +35,7 @@ void main(int argc, char* argv[]) {
   fseek(floppy, 512, SEEK_SET);
   for (i = 0; i < 512; i++) map[i] = fgetc(floppy);
   map[3] = 0xFF;
+  map[4] = 0xFF;
 
   // load the directory
   char files[512 * 2];
