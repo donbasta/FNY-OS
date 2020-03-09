@@ -34,43 +34,45 @@ void main(int argc, char* argv[]) {
   char map[512];
   fseek(floppy, 512, SEEK_SET);
   for (i = 0; i < 512; i++) map[i] = fgetc(floppy);
+  map[3] = 0xFF;
 
   // load the directory
-  char dir[512];
+  char dir[512 * 2];
   fseek(floppy, 512 * 2, SEEK_SET);
-  for (i = 0; i < 512; i++) dir[i] = fgetc(floppy);
+  for (i = 0; i < 512 * 2; i++) dir[i] = fgetc(floppy);
 
   // find a free entry in the directory
-  for (i = 0; i < 512; i = i + 0x20)
-    if (dir[i] == 0) break;
-  if (i == 512) {
+  for (i = 0; i < 512 * 2; i = i + 0x20)
+    if (dir[i + 2] == 0) break;
+  if (i == 512 * 2) {
     printf("Not enough room in directory\n");
     return;
   }
   int dirindex = i;
 
   // fill the name field with 00s first
-  for (i = 0; i < 12; i++) dir[dirindex + i] = 0x00;
+  dir[dirindex] = 0xFF; //asumsi parentnya root
+  for (i = 1; i < 14; i++) dir[dirindex + i] = 0x00;
   // copy the name over
-  for (i = 0; i < 12; i++) {
+  for (i = 2; i < 14; i++) {
     if (argv[1][i] == 0) break;
     dir[dirindex + i] = argv[1][i];
   }
 
-  dirindex = dirindex + 12;
+  dirindex = dirindex + 14;
 
   // find free sectors and add them to the file
   int sectcount = 0;
   while (!feof(loadFil)) {
-    if (sectcount == 20) {
+    if (sectcount == 16) {
       printf("Not enough space in directory entry for file\n");
       return;
     }
 
     // find a free map entry
-    for (i = 0; i < 256; i++)
+    for (i = 0; i < 512; i++)
       if (map[i] == 0) break;
-    if (i == 256) {
+    if (i == 512) {
       printf("Not enough room for file\n");
       return;
     }
@@ -103,7 +105,7 @@ void main(int argc, char* argv[]) {
   for (i = 0; i < 512; i++) fputc(map[i], floppy);
 
   fseek(floppy, 512 * 2, SEEK_SET);
-  for (i = 0; i < 512; i++) fputc(dir[i], floppy);
+  for (i = 0; i < 512 * 2; i++) fputc(dir[i], floppy);
 
   fclose(floppy);
   fclose(loadFil);
