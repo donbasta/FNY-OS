@@ -267,7 +267,7 @@ void writeFile(char *buffer, char *filename, int *sectors)
   }
 }
 
-void readFile(char *buffer, char *filename, int *success)
+void readFile(char *buffer, char *filename, int *success, char parentIndex)
 {
 
   char map[512];
