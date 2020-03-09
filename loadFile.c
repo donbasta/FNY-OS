@@ -35,34 +35,45 @@ void main(int argc, char* argv[]) {
   fseek(floppy, 512, SEEK_SET);
   for (i = 0; i < 512; i++) map[i] = fgetc(floppy);
   map[3] = 0xFF;
+  map[4] = 0xFF;
 
   // load the directory
-  char dir[512 * 2];
+  char files[512 * 2];
   fseek(floppy, 512 * 2, SEEK_SET);
-  for (i = 0; i < 512 * 2; i++) dir[i] = fgetc(floppy);
+  for (i = 0; i < 512 * 2; i++) files[i] = fgetc(floppy);
 
+  char sectors[512];
+  fseek(floppy,512*4, SEEK_SET);
+  for(i = 0;i < 512;i++) sectors[i] = fgetc(floppy);
+
+  int entryIndex;
   // find a free entry in the directory
-  for (i = 0; i < 512 * 2; i = i + 0x20)
-    if (dir[i + 2] == 0) break;
+  for (i = 0; i < 512 * 2; i = i + 0x10)
+    if (files[i + 2] == 0) break;
+    else{
+      if(files[i + 1] != 0xFF){
+        entryIndex = files[i + 1];
+      }
+    }
   if (i == 512 * 2) {
     printf("Not enough room in directory\n");
     return;
   }
   int dirindex = i;
-
+  entryIndex++;
   // fill the name field with 00s first
-  dir[dirindex] = 0xFF; //asumsi parentnya root
-  for (i = 1; i < 14; i++) dir[dirindex + i] = 0x00;
+  files[dirindex] = 0xFF; //asumsi parentnya root
+  for (i = 1; i < 16; i++) files[dirindex + i] = 0x00;
   // copy the name over
-  for (i = 2; i < 14; i++) {
+  files[dirindex + 1] = entryIndex;
+  for (i = 2; i < 16; i++) {
     if (argv[1][i] == 0) break;
-    dir[dirindex + i] = argv[1][i];
+    files[dirindex + i] = argv[1][i];
   }
-
-  dirindex = dirindex + 14;
 
   // find free sectors and add them to the file
   int sectcount = 0;
+  int index = 0;
   while (!feof(loadFil)) {
     if (sectcount == 16) {
       printf("Not enough space in directory entry for file\n");
@@ -81,8 +92,8 @@ void main(int argc, char* argv[]) {
     map[i] = 0xFF;
 
     // mark the sector in the directory entry
-    dir[dirindex] = i;
-    dirindex++;
+    sectors[entryIndex * 16 + index] = i;
+    index++;
     sectcount++;
 
     printf("Loaded %s to sector %d\n", argv[1], i);
@@ -105,7 +116,10 @@ void main(int argc, char* argv[]) {
   for (i = 0; i < 512; i++) fputc(map[i], floppy);
 
   fseek(floppy, 512 * 2, SEEK_SET);
-  for (i = 0; i < 512 * 2; i++) fputc(dir[i], floppy);
+  for (i = 0; i < 512 * 2; i++) fputc(files[i], floppy);
+
+  fseek(floppy, 512 * 4, SEEK_SET);
+  for(i = 0; i < 512 ; i++) fputc(sectors[i], floppy);
 
   fclose(floppy);
   fclose(loadFil);
