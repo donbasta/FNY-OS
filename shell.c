@@ -1,5 +1,5 @@
 // void print(char buff);
-void bacaInput(char buff);
+void bacaInput(char *buff);
 // int div(int a, int b);
 int strcmp(char* s1, char* s2);
 // void printChar(char ch);
@@ -45,7 +45,7 @@ void bacaInput(char* buff){
 		printString("\r");
 	}
 
-	if(buff[0]=='e'&&buff[1]=='c'&&buff[2]=='h'&&buff[3]=='o'){
+	if(buff[0]=='e'&&buff[1]=='c'&&buff[2]=='h'&&buff[3]=='o'&&buff[4]==' '){
 		idx = 5;
 		j = 0;
 		while(buff[idx]!=0x0){
@@ -64,11 +64,11 @@ void bacaInput(char* buff){
 		printString("\r");
 	}
 
-	if(buff[0]=='.'&&buff[1]=='/'){
+	else if(buff[0]=='.'&&buff[1]=='/'&&buff[2]==' '){
 		//for running program inside directory
 	}
 
-	if(buff[0]=='c'&&buff[1]=='d'){
+	else if(buff[0]=='c'&&buff[1]=='d'&&buff[2]==' '){
 		//for changing directories
 		idx = 3;
 		j = 0;
@@ -80,9 +80,16 @@ void bacaInput(char* buff){
 		option[j] = 0x0;
 	}
 
-	if(buff[0]=='l'&&buff[1]=='s'){
+	else if(buff[0]=='l'&&buff[1]=='s'&&buff[2]==' '){
 		//showing all files/folders inside a directory
 	}
+
+	else{
+		printString("Command ");
+		printString(buff);
+		printString(" tidak ditemukan!!!\n");
+	}
+
 
 	return;
 
