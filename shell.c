@@ -5,18 +5,27 @@ int strcmp(char* s1, char* s2);
 // void printChar(char ch);
 // void clear(char*, int);
 
+bool isDir(char *dirPath);
+
+bool isFile(char *filePath);
+
 main(){
 	char buff[100];
+	char path[200];
+	char path[0]='/';
+	char path[1]='\0';
+	//for(int i=0;i<200;i++)
 	printString("Selamat datang di shell v.0.1");
-	printString("\n\r");
-	printString("fny_os@bapak_imba:");
+	//printString("\n\r");
+	//printString("fny_os@bapak_imba:");
 
 	while(1){
 
 		interrupt(0x21,1,buff,0,0);
-		bacaInput(buff);
 		printString("\n\r");
 		printString("fny_os@bapak_imba:");
+		printString(path);
+		bacaInput(buff);
 		// clear(buff,100);
 
 	}
@@ -82,6 +91,10 @@ void bacaInput(char* buff){
 
 	else if(buff[0]=='l'&&buff[1]=='s'&&buff[2]==' '){
 		//showing all files/folders inside a directory
+	}
+
+	else if(buff[0]=='c'&&buff[1]=='a'&&buff[2]=='t'&&buff[3]=' '){
+		//nge cat file
 	}
 
 	else{
