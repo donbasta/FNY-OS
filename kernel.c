@@ -45,6 +45,7 @@ void main()
 
   // EKSEKUSI PROGRAM
   // executeProgram("app", 0x2000, success);
+
   executeProgram("shell", 0x2000, success);
 
 

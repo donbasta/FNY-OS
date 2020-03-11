@@ -16,10 +16,12 @@ main(){
 	char path[200];
 	char path[0]='/';
 	char path[1]='\0';
-	//for(int i=0;i<200;i++)
-	printString("Selamat datang di shell v.0.1");
-	//printString("\n\r");
-	//printString("fny_os@bapak_imba:");
+	printString("Selamat datang di shell v.0.1\n\r");
+
+	char map[512];
+  char files[512 * 2];
+  char sectors[512];
+
 
 	while(1){
 
@@ -28,13 +30,16 @@ main(){
 		printString("fny_os@bapak_imba:");
 		printString(path);
 		bacaInput(buff, path);
-		// clear(buff,100);
 
 	}
 
 }
 
 void bacaInput(char* buff, char *path){
+
+	char map[512];
+  char files[512 * 2];
+  char sectors[512];
 
 	int baca = 1;
 	int idx = 0;
@@ -66,13 +71,8 @@ void bacaInput(char* buff, char *path){
 			idx++;
 		}
 		option[j] = 0x0;
-		// printString(option[0]);
-
-		// printString("hahaha");
 		printString("\n\r");
-		// printString("aha2");
 		printString(option);
-		// printString("aha3");
 		printString("\r");
 	}
 
@@ -83,6 +83,14 @@ void bacaInput(char* buff, char *path){
 	}
 
 	else if(buff[0]=='c'&&buff[1]=='d'&&buff[2]==' '){
+
+		readSector(map, 256);
+	  readSector(files, 257);
+	  readSector(files + 512, 258);
+	  readSector(sectors, 259);
+
+
+
 		//for changing directories
 		idx = 3;
 		j = 0;
@@ -95,6 +103,14 @@ void bacaInput(char* buff, char *path){
 	}
 
 	else if(buff[0]=='l'&&buff[1]=='s'&&buff[2]==' '){
+
+
+		readSector(map, 256);
+	  readSector(files, 257);
+	  readSector(files + 512, 258);
+	  readSector(sectors, 259);
+
+
 		//showing all files/folders inside a directory
 		if(buff[2]==' '){
 
@@ -108,6 +124,12 @@ void bacaInput(char* buff, char *path){
 	}
 
 	else if(buff[0]=='c'&&buff[1]=='a'&&buff[2]=='t'&&buff[3]=' '){
+
+		readSector(map, 256);
+	  readSector(files, 257);
+	  readSector(files + 512, 258);
+	  readSector(sectors, 259);
+
 		//nge cat file
 		if(buff[2]==' '){
 
@@ -119,7 +141,14 @@ void bacaInput(char* buff, char *path){
 			
 		}
 	}
+
 	else if(buff[0]=='r'&&buff[1]=='m'){
+
+		readSector(map, 256);
+	  readSector(files, 257);
+	  readSector(files + 512, 258);
+	  readSector(sectors, 259);
+
 		//delete file in directory
 		if(buff[2]==' '){
 
@@ -131,6 +160,26 @@ void bacaInput(char* buff, char *path){
 
 		}
 	}
+
+	else if(buff[0]=='m'&&buff[1]=='k'&&buff[2]=='d'&&buff[3]=='i'&&buff[4]=='r'&&buff[5]==' '){
+
+		readSector(map, 256);
+	  readSector(files, 257);
+	  readSector(files + 512, 258);
+	  readSector(sectors, 259);
+	  
+		idx = 6;
+		j = 0;
+		while(buff[idx]!=0){
+			option[j] = buff[idx];
+			idx += 1;
+			j += 1;
+		}
+
+
+
+	}
+
 	else{
 		printString("Command ");
 		printString(buff);
@@ -167,5 +216,10 @@ bool isDir(char *dirPath){
 }
 
 bool isFile(char *filePath){
+
+}
+
+void showPrograminFolder(char* ){
+
 
 }
