@@ -32,40 +32,46 @@ void main(int argc, char* argv[]) {
 
   // load the disk map
   char map[512];
-  fseek(floppy, 512, SEEK_SET);
+  fseek(floppy, 512 * 0x100, SEEK_SET);
   for (i = 0; i < 512; i++) map[i] = fgetc(floppy);
-  map[3] = 0xFF;
-  map[4] = 0xFF;
 
   // load the directory
   char files[512 * 2];
-  fseek(floppy, 512 * 2, SEEK_SET);
+  fseek(floppy, 512 * 0x101, SEEK_SET);
   for (i = 0; i < 512 * 2; i++) files[i] = fgetc(floppy);
 
   char sectors[512];
-  fseek(floppy,512*4, SEEK_SET);
+  fseek(floppy,512 * 0x103, SEEK_SET);
   for(i = 0;i < 512;i++) sectors[i] = fgetc(floppy);
 
   int entryIndex;
   // find a free entry in the directory
   for (i = 0; i < 512 * 2; i = i + 0x10)
     if (files[i + 2] == 0) break;
-    else{
-      if(files[i + 1] != 0xFF){
-        entryIndex = files[i + 1];
-      }
-    }
+    
   if (i == 512 * 2) {
     printf("Not enough room in directory\n");
     return;
   }
+  // cari indeks sektor yang kosong pada sectors
+  for(i = 0;i<32;i++){
+    if(sectors[i*32] == 0){
+      entryIndex = i;
+      break;
+    }
+  }
+  if(i == 32){
+    printf("Tidak ada entry kosong!\n");
+    return;
+  }
+
   int dirindex = i;
-  entryIndex++;
+
+  files[dirindex + 1] = entryIndex;
   // fill the name field with 00s first
   files[dirindex] = 0xFF; //asumsi parentnya root
   for (i = 1; i < 16; i++) files[dirindex + i] = 0x00;
   // copy the name over
-  files[dirindex + 1] = entryIndex;
   for (i = 2; i < 16; i++) {
     if (argv[1][i] == 0) break;
     files[dirindex + i] = argv[1][i];
@@ -112,13 +118,13 @@ void main(int argc, char* argv[]) {
   }
 
   // write the map and directory back to the floppy image
-  fseek(floppy, 512, SEEK_SET);
+  fseek(floppy, 512 * 0x100, SEEK_SET);
   for (i = 0; i < 512; i++) fputc(map[i], floppy);
 
-  fseek(floppy, 512 * 2, SEEK_SET);
+  fseek(floppy, 512 * 0x101, SEEK_SET);
   for (i = 0; i < 512 * 2; i++) fputc(files[i], floppy);
 
-  fseek(floppy, 512 * 4, SEEK_SET);
+  fseek(floppy, 512 * 0x103, SEEK_SET);
   for(i = 0; i < 512 ; i++) fputc(sectors[i], floppy);
 
   fclose(floppy);
