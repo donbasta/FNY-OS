@@ -1,21 +1,18 @@
-// void print(char buff);
 void bacaInput(char *buff);
-// int div(int a, int b);
-int strcmp(char* s1, char* s2);
-// void printChar(char ch);
-// void clear(char*, int);
-
 bool isDir(char *dirPath);
-
 bool isFile(char *filePath);
-
 void charRemnant(char *str, char *target, int i);
+void showFolderContent(char* str)
+
+
+
 
 main(){
 	char buff[100];
 	char path[200];
 	char path[0]='/';
 	char path[1]='\0';
+
 	printString("Selamat datang di shell v.0.1\n\r");
 
 	char map[512];
@@ -46,12 +43,12 @@ void bacaInput(char* buff, char *path){
 	int idx = 0;
 	char option[20];
 	int j;
+	int k;
 	char pathParams[150];
 
-	//baca string command karakter per karakter
 	while(baca){
 		if(buff[idx]==0x0){
-			baca = 0; //selesai baca command
+			baca = 0;
 		} else {
 			idx = idx+1;
 		}
@@ -63,18 +60,26 @@ void bacaInput(char* buff, char *path){
 		printString("\r");
 	}
 
-	if(buff[0]=='e'&&buff[1]=='c'&&buff[2]=='h'&&buff[3]=='o'&&buff[4]==' '){
-		idx = 5;
-		j = 0;
-		while(buff[idx]!=0x0){
-			option[j] = buff[idx];
-			j++;
-			idx++;
-		}
-		option[j] = 0x0;
-		printString("\n\r");
-		printString(option);
-		printString("\r");
+	else if(buff[0]=='e'&&buff[1]=='c'&&buff[2]=='h'&&buff[3]=='o'){
+		if(buff[4]==0x0){
+			printString("\r\n");
+		} else if(buff[4]==' '){
+			idx = 5;
+			j = 0;
+			while(buff[idx]!=0x0){
+				option[j] = buff[idx];
+				j++;
+				idx++;
+			}
+			option[j] = 0x0;
+			printString("\n\r");
+			printString(option);
+			printString("\r");
+		} else {
+			printString("Command '");
+			printString(buff);
+			printString("' tidak ditemukan!!!\n\r");
+		}	
 	}
 
 	else if(buff[0]=='.'&&buff[1]=='/'){
@@ -83,7 +88,9 @@ void bacaInput(char* buff, char *path){
 		
 	}
 
-	else if(buff[0]=='c'&&buff[1]=='d'&&buff[2]==' '){
+	else if(buff[0]=='c'&&buff[1]=='d'){
+
+		int dir[512];
 
 		readSector(map, 256);
 	  readSector(files, 257);
@@ -91,19 +98,39 @@ void bacaInput(char* buff, char *path){
 	  readSector(sectors, 259);
 
 		//for changing directories
-		idx = 3;
-		j = 0;
-		while(buff[idx]!=0x0){
-			pathParams[j] = buff[idx];
-			j++;
-			idx++;
-		}
-		pathParams[j] = 0x0;
 
-		j=0;
-		while(pathParams[j]!=0x0){
-			//baca terus sampe ketemu /
-		}
+	  if(buff[2]==0x0){
+	  	//langsung ke home, ubah si path
+	  } else if(buff[2]==' '){
+	  	idx = 3;
+			j = 0;
+			while(buff[idx]!=0x0){
+				pathParams[j] = buff[idx];
+				j++;
+				idx++;
+			}
+			pathParams[j] = 0x0;
+
+			j=0;
+
+			while(pathParams[j]!=0x0){
+
+				k = 0;
+				while(pathParams[j]!='/' && pathParams[j]!=0x0){
+					dir[k] = pathParams[j];
+					k++;
+					j++;
+				}
+				pathParams[k] = 0x0;
+				j++;
+
+				//cari pathParams di current path;
+				//kalau ada update pathnya, kalau nggak, error
+
+			}
+	  }
+
+		
 
 
 	}
@@ -226,12 +253,32 @@ void bacaInput(char* buff, char *path){
 int strcmp(char* s1, char* s2){
 	for(; *s1 == *s2; ++s1, ++s2){
 		if(*s1 == 0x0 || *s2 == 0x0){
-			// return 0; //yang satu adalah prefix dari yang satunya
 			break;
 		}
 	}
 	if(*s1 != *s2) return 0;
 	else return 1;
+}
+
+char* append(char* s1, char* s2){
+	char[200] s_res;
+
+	int j = 0;
+	int idx = 0;
+
+	while(s1[idx]!=0x0){
+		s_res[j] = s1[idx];
+		j++;
+		idx++;
+	}
+
+	while(s2[idx]!=0x0){
+		s_res[j] = s2[idx];
+		j++;
+		idx++;
+	}
+
+	s_res[j] = 0x0;
 }
 
 void charRemnant(char *str, char *target, int i){
@@ -243,12 +290,55 @@ void charRemnant(char *str, char *target, int i){
 	target[j] = '\0';
 }
 
+
+
+
+
 bool isDir(char *dirPath){
 }
+
+
+
 
 bool isFile(char *filePath){
 }
 
 
-void showPrograminFolder(char* ){
-}
+
+
+
+
+
+// void showFolderContent(char* ){
+// }
+
+
+
+// char* path(int i){
+
+// 	// char map[512];
+//   char files[512 * 2];
+//   // char sectors[512];
+
+//   int par;
+//   char absolutePath[200];
+
+// 	// readSector(map, 256);
+// 	readSector(files, 257);
+// 	readSector(files + 512, 258);
+// 	// readSector(sectors, 259);
+
+// 	while(par != 0xff){
+
+// 		// absolutePath = / + namafile ke i + absolutePath
+
+// 		par = files[i * 16];
+// 		i = par;
+
+// 	}
+
+// 	return absolutePath;
+
+
+// }
+
