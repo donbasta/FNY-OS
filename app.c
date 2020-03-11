@@ -8,8 +8,8 @@ void main () {
   char namaDua[20*512];
   int i;
   int j;
-  int cocok1;
-  int cocok2;
+  char cocok1;
+  char cocok2;
   int kecocokan;
   int digit[10];
   int satuan;
@@ -63,7 +63,7 @@ void main () {
   interrupt(0x10, persen, 0x0, 0x0, 0x0); // interrupt karakter persen
   printString("\n\n\r");
 
-  printString("Verdict:\n\r");
+  printString("Verdict:\n\r")
   if(kecocokan < 20){
     printString("Bukan Jodoh :(\n\n\r");
   } else if (kecocokan < 50){

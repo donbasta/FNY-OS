@@ -77,37 +77,68 @@ void main()
 
 }
 
-void handleInterrupt21 (int AX, int BX, int CX, int DX) {
-   char AL, AH;
-   AL = (char) (AX);
-   AH = (char) (AX >> 8);
-   switch (AL) {
-      case 0x00:
-         printString(BX);
-         break;
-      case 0x01:
-         readString(BX);
-         break;
-      case 0x02:
-         readSector(BX, CX);
-         break;
-      case 0x03:
-         writeSector(BX, CX);
-         break;
-      case 0x04:
-         readFile(BX, CX, DX, AH);
-         break;
-      case 0x05:
-         writeFile(BX, CX, DX, AH);
-         break;
-      case 0x06:
-         executeProgram(BX, CX, DX);
-         break;
-      default:
-         printString("Invalid interrupt");
-   }
+void handleInterrupt21 (int AX, int BX, int CX, int DX) {  
+    char AL, AH;
+    AL = (char) (AX);
+    AH = (char) (AX >> 8);   
+    switch (AL) {      
+        case 0x00:
+            printString(BX);
+            break;      
+        case 0x01:         
+            readString(BX);         
+            break;      
+        case 0x02:
+            readSector(BX, CX);         
+            break;      
+        case 0x03:         
+            writeSector(BX, CX);         
+            break;      
+        case 0x04:         
+            readFile(BX, CX, DX, AH);         
+            break;      
+        case 0x05:         
+            writeFile(BX, CX, DX, AH);         
+            break;      
+        case 0x06:         
+            executeProgram(BX, CX, DX, AH);         
+            break;      
+        default:         
+            printString("Invalid interrupt");   
+    }
 }
 
+
+// void handleInterrupt21 (int AX, int BX, int CX, int DX) {
+//    char AL, AH;
+//    AL = (char) (AX);
+//    AH = (char) (AX >> 8);
+//    switch (AL) {
+//       case 0x00:
+//          printString(BX);
+//          break;
+//       case 0x01:
+//          readString(BX);
+//          break;
+//       case 0x02:
+//          readSector(BX, CX);
+//          break;
+//       case 0x03:
+//          writeSector(BX, CX);
+//          break;
+//       case 0x04:
+//          readFile(BX, CX, DX, AH);
+//          break;
+//       case 0x05:
+//          writeFile(BX, CX, DX, AH);
+//          break;
+//       case 0x06:
+//          executeProgram(BX, CX, DX);
+//          break;
+//       default:
+//          printString("Invalid interrupt");
+//    }
+// }
 
 void printString(char *string)
 {
