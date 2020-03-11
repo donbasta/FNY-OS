@@ -29,6 +29,7 @@ main(){
 		printString("\n\r");
 		printString("fny_os@bapak_imba:");
 		printString(path);
+		printString("$ ");
 		bacaInput(buff, path);
 
 	}
@@ -89,17 +90,22 @@ void bacaInput(char* buff, char *path){
 	  readSector(files + 512, 258);
 	  readSector(sectors, 259);
 
-
-
 		//for changing directories
 		idx = 3;
 		j = 0;
 		while(buff[idx]!=0x0){
-			option[j] = buff[idx];
+			pathParams[j] = buff[idx];
 			j++;
 			idx++;
 		}
-		option[j] = 0x0;
+		pathParams[j] = 0x0;
+
+		j=0;
+		while(pathParams[j]!=0x0){
+			//baca terus sampe ketemu /
+		}
+
+
 	}
 
 	else if(buff[0]=='l'&&buff[1]=='s'&&buff[2]==' '){
@@ -152,38 +158,64 @@ void bacaInput(char* buff, char *path){
 		//delete file in directory
 		if(buff[2]==' '){
 
+			idx = 3;
+			j = 0;
+			while(buff[idx]!=0x0){
+				option[j] = buff[idx];
+				j += 1;
+				idx += 1;
+			}
+			option[j] = 0x0;
+
+			//cari file bernama option di folder saat ini. Kalau ada, delete file.
+
 		}
 		else if (buff[2]=='\0'){
-
+			printString("rm: missing operand");
+			printString("\r\n");
+			printString("Try 'rm --help' for more information.");
+			printString("\r\n");
 		}
-		else{
 
-		}
 	}
 
-	else if(buff[0]=='m'&&buff[1]=='k'&&buff[2]=='d'&&buff[3]=='i'&&buff[4]=='r'&&buff[5]==' '){
+	else if(buff[0]=='m'&&buff[1]=='k'&&buff[2]=='d'&&buff[3]=='i'&&buff[4]=='r'){
 
 		readSector(map, 256);
 	  readSector(files, 257);
 	  readSector(files + 512, 258);
 	  readSector(sectors, 259);
-	  
+
 		idx = 6;
 		j = 0;
-		while(buff[idx]!=0){
-			option[j] = buff[idx];
-			idx += 1;
-			j += 1;
+
+		if(buff[5]==' '){
+			while(buff[idx]!=0){
+				option[j] = buff[idx];
+				idx += 1;
+				j += 1;
+			}
+			option[j] = 0x0;
+
+
+			//create folder dengan nama option
+
+
+		} else if(buff[5]==0x0){
+			printString("mkdir: missing operand");
+			printString("\r\n");
+			printString("Try 'mkdir --help' for more information.");
+			printString("\r\n");
 		}
 
-
+		
 
 	}
 
 	else{
-		printString("Command ");
+		printString("Command '");
 		printString(buff);
-		printString(" tidak ditemukan!!!\n");
+		printString("' tidak ditemukan!!!\n\r");
 	}
 
 
@@ -212,14 +244,11 @@ void charRemnant(char *str, char *target, int i){
 }
 
 bool isDir(char *dirPath){
-
 }
 
 bool isFile(char *filePath){
-
 }
 
+
 void showPrograminFolder(char* ){
-
-
 }
