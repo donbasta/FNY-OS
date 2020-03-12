@@ -7,7 +7,7 @@ void writeSector(char *buffer, int sector);
 void readFile(char *buffer, char *path, int *result, char parentIndex);
 void clear(char *buffer, int length);
 void writeFile(char *buffer, char *path, int *sectors, char parentIndex);
-void executeProgram(char *filename, int segment, int *success);
+void executeProgram(char *filename, int segment, int *success, char parentIndex);
 
 char map[512];
 char dir[512 * 2];
@@ -158,10 +158,10 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   
   char idxParent;
 
-  readSector(map, 1);
-  readSector(files, 2);
-  readSector(files + 512, 3);
-  readSector(sectors, 4);
+  readSector(map, 0x100);
+  readSector(files, 0x101);
+  readSector(files + 512, 0x102);
+  readSector(sectors, 0x103);
 
   char parent[14];
   char filename[14];
@@ -297,10 +297,10 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
     sectors[entryIndex*16 + j] = 0x0;
   }
 
-  writeSector(map, 1);
-  writeSector(files, 2);
-  writeSector(files + 512, 3);
-  writeSector(sectors, 4);
+  writeSector(map, 0x100);
+  writeSector(files, 0x101);
+  writeSector(files + 512, 0x102);
+  writeSector(sectors, 0x103);
 }
 
 void readFile(char *buffer, char *path, int *result, char parentIndex){
@@ -314,9 +314,9 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
   int entryIndex;
   int idxParent;
 
-  readSector(files, 2);
-  readSector(files + 512, 3);
-  readSector(sectors, 4);
+  readSector(files, 0x101);
+  readSector(files + 512, 0x102);
+  readSector(sectors, 0x103);
 
   char parent[14];
   char filename[14];
@@ -418,13 +418,13 @@ void clear(char *buffer, int length)
   }
 }
 
-void executeProgram(char *filename, int segment, int *success)
+void executeProgram(char *filename, int segment, int *success, char parentIndex)
 {
 
   int i;
   char buffer[13312];
 
-  readFile(buffer, filename, success);
+  readFile(buffer, filename, success, parentIndex);
 
   if (*success)
   {
