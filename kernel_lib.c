@@ -14,6 +14,7 @@ char files[512 * 2];
 char sectors[512];
 char freeSector[512];
 
+
 void handleInterrupt21 (int AX, int BX, int CX, int DX) {  
     char AL, AH;
     AL = (char) (AX);
@@ -117,135 +118,118 @@ void writeSector(char *buffer, int sector)
 
 void writeFile(char *buffer, char *path, int *sectors, char parentIndex) {
   char map[512];
-  char dir[1024];
+  char files[1024];
   char sector[512];
-  int i, j, avail, found, isExist;
+  char buf[512];
+  int i;
+  int j;
+  int k;
+  int l;
+  int m;
+  int n;
+  int ada;
+  int sect;
+  int pos;
+  int sama;
 
 
-  readSector(map, 0x100);
-  readSector(dir, 0x101);
-  readSector(dir + 512, 0x102);
-  readSector(sector, 0x103);
+  readSector(map, 256);
+  readSector(files, 257);
+  readSector(files + 512, 258);
+  readSector(sector, 259);
+
   j = 0;
-  found = 0;
+  l = 0;
     
-    
-    // TODO : check if folder exists
-    
-    
-  // printString("Searching for empty directory :\n\r");
-  while (!found && j < 1024) {
-    if (dir[j] == 0x0 && dir[j + 1] == 0x0 && dir[j + 2] == 0x0) {
-      found = 1;
+  while (!l && j<64) {
+    if (files[j*16] == 0x0 && files[j*16 + 1] == 0x0 && files[j*16 + 2] == 0x0) {
+      l = 1;
     } else {
-      j += 16;
+      j++;
     }
   }
-  // Cari apakah nama file ada di dalam dir
-    // Potongan 32 bytes, 12 bytes file name, 20 bytes sector
-    isExist = 0;
+
+    ada = 0;
     i = 0;
-    while (isExist == 0 && i < 64) {
-        // Cek apakah pada terdapat file pada baris ke i
-        if (dir[16 * i] == parentIndex) {
-            // writeLine("Same dir!");
-            if (dir[16 * i + 2] != 0x0 && dir[16 * i + 1] != 0xFF) {
-                int curPos = i * 16 + 2;
-                
-                // Terdapat file, cek kesamaan nama
-                int j = 0;
-                int isSame = 1;
-                // printString("\r\nFile found with name : \0");
-                // printString(dirBuf + 16 * i + 2);
-                // printString(" <====> \0");
-                // printString(filename);
-                // printString("\r\n\0");
-                while (isSame == 1 && j < 14) {
-                    if (dir[j + curPos] != path[j]) {
-                        isSame = 0;
-                    } else if (dir[j + curPos] == '\0' && path[j] == '\0') {
+    while (ada == 0 && i < 64) {
+
+        if (files[16 * i] == parentIndex) {
+          
+            if (files[16 * i + 2] != 0x0 && files[16 * i + 1] != 0xff) {
+                j = 0;
+                sama = 1;             
+                while (sama == 1 && j < 14) {
+                    if (files[j + 16*i + 2] != path[j]) {
+                        sama = 0;
+                    } else if (files[j + 16*i + 2] == 0x0 && path[j] == 0x0) {
                         j = 13;
                     }
                     j++;
                 }
 
-                if (isSame) {
-                    // printString("Same!\r\n\0");
-                    isExist = 1;
+                if (sama) {
+                    ada = 1;
                     *sectors = -1;
                     return;
-                    // if (dirBuf[i * 16 + 1] == 0x15) { writeLine("On sector 21"); }
                 }
             }
         }
         
         i++;
     }
-  // printString("Done Searching\n\r");
-  if (found && !isExist) {
-    int k = 0;
-    int stop = 0;
-    // printString("There is an empty directory\n\r");
-    // printString("Searching for empty sector map\n\r");
-    while (!stop && k < 256) {
+
+  if (l && !ada) {
+    k = 0;
+    pos = 0;
+    while (!pos && k < 256) {
       if (map[k] == 0x0) {
-        stop = 1;
+        pos = 1;
       } else {
         k++;
       }
     }
-    // printString("Done searching\n\r");
-    if ((256 - k) >= 16) {
-      int m, n, o, sectCount;
-      char temp[512];
-      // printString("there is an empty sector\n\r");
-            for (o = 0; o < 32; o++) {
-                if (sector[o*16] == 0x0) break;
+    if (240 >= k) {
+            for (i = 0; i < 32; i++) {
+                if (sector[i*16] == 0x0) break;
             }
       for (m = 0; m < 16; m++) {
-        dir[j + m] = 0x0;
+        files[j + m] = 0x0;
       }
       for (m = 2; m < 16; m++) {
-                dir[j + m] = path[m - 2];
+                files[j + m] = path[m - 2];
             }
-      // mark entry
-      dir[j] = parentIndex;
-      dir[j + 1] = o;
-      // printString("done renaming\n\r");
+      files[j] = parentIndex;
+      files[j + 1] = i;
             
       n = 0;
       m = 0;
-            sectCount = 0;
-      // printString("putting buffer into sectors\n\r");
+      sect = 0;
       while (buffer[n] != 0x0) {
         int l = 0;
-        clear(temp, 512);
+        clear(buf, 512);
         while (buffer[n] != 0x0 && l < 512) {
-          temp[l] = buffer[n];
+          buf[l] = buffer[n];
           n++;
           l++;
         }
-        map[k] = 0xFF;
-        sector[o * 16 + sectCount] = k;
-        writeSector(temp, k);
+        map[k] = 0xff;
+        sector[i * 16 + sect] = k;
+        writeSector(buf, k);
         k++;
-                sectCount++;
+        sect++;
       }
-      writeSector(sector, 0x103);
-      writeSector(dir+512, 0x102);
-      writeSector(dir, 0x101);
-      writeSector(map, 0x100);
-      // printString("DONEEE\n\r");
+      
+      writeSector(map, 256);
+      writeSector(files, 257);
+      writeSector(files+512, 258);
+      writeSector(sector, 259);
+
             *sectors = 1;
     } else {
-      //terminate
             *sectors = -3;
-      return;
     }
   } else {
-    //terminate
         *sectors = -2;
-    return;
   }
 
   clear(path, 10);
