@@ -12,6 +12,7 @@ char absPath[100];
 int main(){
 
 	char curDir;
+	int i;
 
 	printString("\n\n\r");
 	printString("Selamat datang di shell v.0.1\n\r");
@@ -23,15 +24,19 @@ int main(){
 
 	while(1){
 
-		interrupt(0x21,1,buff,0,0);
+		// interrupt(0x21,1,buff,0,0);
+		for(i = 0; i<100; i++){
+			buff[i] = 0x0;
+		}
+		readString(buff);
 		bacaInput(buff, &curDir);
 		printString("\n\r");
 		printString("fny_os@bapak_imba:");
 		// printString(path(curDir));
 		printString("$ ");
-		clear(buff,100);
 		// printString(buff);
 		printNumber(curDir);
+
 
 	}
 
@@ -107,6 +112,9 @@ void bacaInput(char* buff, char* curDir){
 				idx++;
 			}
 			option[j] = 0x0;
+			for(;j<14;j++){
+				option[j] = 0x0;
+			}
 
 			for(i = 0; i < 512 * 2; i = i + 16){
 				if(files[i]==0x0 && files[i+1]==0x0 && files[i+2]==0x0){
@@ -159,14 +167,13 @@ void bacaInput(char* buff, char* curDir){
 				if(buff[idx]!='/'){
 					pathParams[j] = buff[idx];
 					j++;
-					idx++;
 				} else {
 					pathParams[j] = 0x0;
 					if(strcmp(pathParams,"..")){
 						*curDir = files[(*curDir) * 16];
 					} else {
 						i = 0;
-						while(i<64 && cekNamaFile(files, pathParams, i) == 0){
+						while(i<64 && (files[i*16] != *curDir || cekNamaFile(files, pathParams, i) == 0)){
 							i++;
 						}
 						if(i == 64) {
@@ -179,15 +186,15 @@ void bacaInput(char* buff, char* curDir){
 					}
 					clear(pathParams);
 					j = 0;
-					idx++;
 				}
+				idx++;
 			}
 			pathParams[j] = 0x0;
 			if(strcmp(pathParams,"..")){
 				*curDir = files[(*curDir) * 16];
 			} else {
 				i = 0;
-				while(i<64 && files[i*16] != *curDir && cekNamaFile(files, pathParams, i) == 0){
+				while(i<64 && (files[i*16] != *curDir || cekNamaFile(files, pathParams, i) == 0)){
 					i++;
 				}
 				if(i == 64) {
