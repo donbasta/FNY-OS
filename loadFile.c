@@ -70,7 +70,7 @@ void main(int argc, char* argv[]) {
   }
 
   files[dirindex + 1] = entryIndex;
-  files[dirindex] = 0xFF; //asumsi parentnya root
+  files[dirindex] = 0xff; //asumsi parentnya root
 
   // fill the name field with 00s first
   for (i = 0; i < 14; i++) files[dirindex + i + 2] = 0x00;

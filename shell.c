@@ -5,6 +5,7 @@ void charRemnant(char *str, char *target, int i);
 void showFolderContent(char* str);
 int cekNamaFile(char* files, char* buff, int i);
 void printNumber(int a);
+void generatePath(char curDir);
 
 char buff[100];
 char absPath[100];
@@ -17,6 +18,7 @@ int main(){
 	printString("\n\n\r");
 	printString("Selamat datang di shell v.0.1\n\r");
 	printString("fny_os@bapak_imba:");
+	// printString("/");
 	printString("/");
 	printString("$ ");
 
@@ -32,11 +34,9 @@ int main(){
 		bacaInput(buff, &curDir);
 		printString("\n\r");
 		printString("fny_os@bapak_imba:");
-		// printString(path(curDir));
+		generatePath(curDir);
 		printString("$ ");
-		// printString(buff);
-		printNumber(curDir);
-
+		// printNumber(curDir);
 
 	}
 
@@ -55,19 +55,14 @@ void bacaInput(char* buff, char* curDir){
 	int j;
 	int k;
 	char pathParams[150];
+	int success;
+
+	clear(option, 20);
 
 	readSector(map, 256);
 	readSector(files, 257);
 	readSector(files + 512, 258);
 	readSector(sectors, 259);
-
-	// while(baca){
-	// 	if(buff[idx]==0x0){
-	// 		baca = 0;
-	// 	} else {
-	// 		idx = idx+1;
-	// 	}
-	// }
 
 	if(strcmp(buff,"halo")){
 		printString("\n\r");
@@ -137,15 +132,36 @@ void bacaInput(char* buff, char* curDir){
 
 
 		} else {
-			printString("Command '");
+			printString("\n\rCommand '");
 			printString(buff);
 			printString("' tidak ditemukan!!!\n\r");
 		}	
 	}
 
 	else if(buff[0]=='.'&&buff[1]=='/'){
-		//for running program inside directory
-		charRemnant(buff, pathParams, 2);
+
+		idx = 2;
+		j = 0;
+		while(buff[idx]!=0x0){
+			option[j] = buff[idx];
+			j++;
+			idx++;
+		}
+		for(;j<14;j++){
+			option[j] = 0x0;
+		}
+
+		i = 0;
+		while(i<64 && (files[i*16] != *curDir || cekNamaFile(files, option, i) == 0 || files[i*16+1] == 0xff)){
+			i++;
+		}
+		if(i == 64) {
+			printString("\r\n");
+			printString("program tidak valid");
+			return;
+		} else {
+			executeProgram(option, 0x4000, &success);
+		}
 		
 	}
 
@@ -170,10 +186,12 @@ void bacaInput(char* buff, char* curDir){
 				} else {
 					pathParams[j] = 0x0;
 					if(strcmp(pathParams,"..")){
-						*curDir = files[(*curDir) * 16];
+						if(*curDir != 0xff){
+							*curDir = files[(*curDir) * 16];
+						}
 					} else {
 						i = 0;
-						while(i<64 && (files[i*16] != *curDir || cekNamaFile(files, pathParams, i) == 0)){
+						while(i<64 && (files[i*16] != *curDir || files[i*16+1] != 0xff || cekNamaFile(files, pathParams, i) == 0)){
 							i++;
 						}
 						if(i == 64) {
@@ -191,10 +209,12 @@ void bacaInput(char* buff, char* curDir){
 			}
 			pathParams[j] = 0x0;
 			if(strcmp(pathParams,"..")){
-				*curDir = files[(*curDir) * 16];
+				if(*curDir != 0xff){
+					*curDir = files[(*curDir) * 16];
+				}
 			} else {
 				i = 0;
-				while(i<64 && (files[i*16] != *curDir || cekNamaFile(files, pathParams, i) == 0)){
+				while(i<64 && (files[i*16] != *curDir || files[i*16+1] != 0xff || cekNamaFile(files, pathParams, i) == 0)){
 					i++;
 				}
 				if(i == 64) {
@@ -219,87 +239,26 @@ void bacaInput(char* buff, char* curDir){
 
 	}
 
-	// else if(buff[0]=='r'&&buff[1]=='m'){
-
-	// 	readSector(map, 256);
-	//   readSector(files, 257);
-	//   readSector(files + 512, 258);
-	//   readSector(sectors, 259);
-
-	// 	//delete file in directory
-	// 	if(buff[2]==' '){
-
-	// 		idx = 3;
-	// 		j = 0;
-	// 		while(buff[idx]!=0x0){
-	// 			option[j] = buff[idx];
-	// 			j += 1;
-	// 			idx += 1;
-	// 		}
-	// 		option[j] = 0x0;
-
-	// 		//cari file bernama option di folder saat ini. Kalau ada, delete file.
-
-	// 	}
-	// 	else if (buff[2]=='\0'){
-	// 		printString("rm: missing operand");
-	// 		printString("\r\n");
-	// 		printString("Try 'rm --help' for more information.");
-	// 		printString("\r\n");
-	// 	}
-
-	// }
-
-	// else if(buff[0]=='m'&&buff[1]=='k'&&buff[2]=='d'&&buff[3]=='i'&&buff[4]=='r'){
-
-	// 	int entryIdx;
-
-	// 	idx = 6;
-	// 	j = 0;
-
-
-	// 	if(buff[5]==' '){
-	// 		while(buff[idx]!=0x0){
-	// 			option[j] = buff[idx];
-	// 			idx += 1;
-	// 			j += 1;
-	// 		}
-	// 		option[j] = 0x0;
-
-	// 		printString(option);
-
-
-	// 		//create folder dengan nama option
-
-	// 		for(i = 0; i < 64; i+=16){
-	// 			if(files[i]==0x0 && files[i+1]==0x0 && files[i+2]==0x0){
-	// 				entryIdx = i;
-	// 				break;
-	// 			}
-	// 		}
-
-	// 		if(i == 64){
-	// 			printString("Full memory:(\n\r");
-	// 			return;
-	// 		}
-
-	// 		files[entryIdx] = curDir;
-	// 		files[entryIdx+1] = 0xff;
-	// 		for(i=0; i<14; i++){
-	// 			files[entryIdx + i + 2] = option[i];
-	// 		}
-
-	// 	} else if(buff[5]==0x0){
-	// 		printString("mkdir: missing operand");
-	// 		printString("\r\n");
-	// 		printString("Try 'mkdir --help' for more information.");
-	// 		printString("\r\n");
-	// 	}
-
-	
-	// }
-
 	else{
+
+		j=0;
+		idx=0;
+		while(buff[idx] != 0x0){
+			option[j] = buff[idx];
+			j++;
+			idx++;
+		}
+		for(;j<14;j++){
+			option[j]=0x0;
+		}
+
+		for(i=0; i<64; i++){
+			if(files[i*16]==5 && cekNamaFile(files, option, i)){
+				printString("\n\r");
+				executeProgram(option, 0x4000, &success);
+			}
+		}
+
 		printString("\n\rCommand '");
 		printString(buff);
 		printString("' tidak ditemukan!!!\n\r");
@@ -325,27 +284,6 @@ int strcmp(char* s1, char* s2){
 	else return 1;
 }
 
-// char* append(char* s1, char* s2){
-// 	char[200] s_res;
-
-// 	int j = 0;
-// 	int idx = 0;
-
-// 	while(s1[idx]!=0x0){
-// 		s_res[j] = s1[idx];
-// 		j++;
-// 		idx++;
-// 	}
-
-// 	while(s2[idx]!=0x0){
-// 		s_res[j] = s2[idx];
-// 		j++;
-// 		idx++;
-// 	}
-
-// 	s_res[j] = 0x0;
-// }
-
 void charRemnant(char *str, char *target, int i){
 	int j;
 	for(j=0; str[i]!='\0'; j++){
@@ -354,42 +292,6 @@ void charRemnant(char *str, char *target, int i){
 	}
 	target[j] = '\0';
 }
-
-
-
-
-
-// bool isDir(char *dirPath){
-// }
-
-
-
-
-// bool isFile(char *filePath){
-// }
-
-
-// char* path(int i){
-
-//   char files[512 * 2];
-//   int par;
-//   char absolutePath[200];
-
-//   absolutePath[0] = '/';
-
-// 	readSector(files, 257);
-// 	readSector(files + 512, 258);
-
-// 	while(i != 0xff){
-
-// 		i = files[i * 16];
-		
-
-// 	}
-
-// 	return absolutePath;
-
-// }
 
 void showFolderContent(int curDir){
 
@@ -424,7 +326,6 @@ int cekNamaFile(char* files, char* buff, int i){
 	}
 
 	filename[k] = 0x0;
-	// files[i*16+j] = 0x0;
 
 	if(strcmp(filename, buff)){
 		return 1;
@@ -454,11 +355,40 @@ void printNumber(int a){
   digit[8] = pad * 0x100 + '8';
   digit[9] = pad * 0x100 + '9';
 
-	
-
   interrupt(0x10, digit[ratusan], 0x0, 0x0, 0x0); // interrupt digit puluhan
   interrupt(0x10, digit[puluhan], 0x0, 0x0, 0x0); // interrupt digit satuan
   interrupt(0x10, digit[satuan], 0x0, 0x0, 0x0); // interrupt digit satuan
  	printString("\r\n");
   
+}
+
+void generatePath(char curDir){
+	char listedPath[1000];
+	char files[512 * 2];
+	char path[100];
+	int i,j,k;
+	i = 0;
+
+	readSector(files, 257);
+	readSector(files + 512, 258);
+
+	while(curDir != 0xFF){
+		path[i++] = curDir;
+		curDir = files[curDir * 16];
+	}
+
+	j = 0;
+	while(i > 0){
+		listedPath[j++] = '/';
+		for(k = 0; k < 14 && files[path[i-1]*16 + 2 + k] != 0x0;k++){
+			listedPath[j++] = files[path[i-1] * 16 + 2 + k];
+		}
+		i--;
+	}
+
+	if(j>0){
+		printString(listedPath);
+	}else{
+		printString("/");
+	}
 }

@@ -80,6 +80,8 @@ void readString(char *string)
       if (ptr > 0)
       {
         interrupt(0x10, 0xe * 0x100 + ch, 0x0, 0x0, 0x0);
+        interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
+        interrupt(0x10, 0xe * 0x100 + ch, 0x0, 0x0, 0x0);
         --ptr;
       }
       else
@@ -113,195 +115,41 @@ void writeSector(char *buffer, int sector)
   interrupt(0x13, 0x301, buffer, div(sector, 36) * 0x100 + mod(sector, 18) + 1, mod(div(sector, 18), 2) * 0x100);
 }
 
-void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
+void writeFile(char *buffer, char *path, int *sectors, char parentIndex) {
   char map[512];
-  char files[512 * 2];
-  char sectors[512];
+  char dir[1024];
+  char sector[512];
+  int i, j, avail, found, isExist;
 
-  int i,j,k;
-  int entryIndex;
-  int entryFile;
 
-  int sama;
-  
-  char idxParent;
-
-  char parent[14];
-  char filename[14];
-
-  readSector(map, 256);
-  readSector(files, 257);
-  readSector(files + 512, 258);
-  readSector(sectors, 259);
-
-  
-  for(i = 0;i<14;i++){
-    parent[i] = 0x0;
-    filename[i] = 0x0;
-  }
-  
-  // mengambil current file name dan current parent name
+  readSector(map, 0x100);
+  readSector(dir, 0x101);
+  readSector(dir + 512, 0x102);
+  readSector(sector, 0x103);
   j = 0;
-  for(i = 0 ;i < sizeof(path); i++){
-    if(path[i] != '/'){
-      filename[j++] = path[i];
-    }else{
-      for(; j < 14; j++){
-        filename[j] = 0x0;
-      }
-      j = 0;
-      for(k = 0;k<14;k++){
-        parent[k] = filename[k];
-      }
-    }
-  }
-  // pad with 0
-  for(;j<14;j++){
-    filename[j] = 0x0;
-  }
-
-  // mencari index parent
-  idxParent = parentIndex;
-  if(parent[0] != 0x0){
-    for(i = 0;i<64;i++){
-      if(files[i*16 + 1] == 0xFF){
-        int beda = 0;
-        for(j = 0;j<14;j++){
-          if(files[i*16 + 2 + j] != parent[j]){
-            beda = 1;
-            break;
-          }
-        }
-        if(beda){
-          continue;
-        }
-        idxParent = files[i*16];
-      }
-    }
-  }
-
-  // mencari apakah ada file yang sama
-  sama = 0;
-  for(i = 0;i<64;i++){
-    if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
-      int beda = 0;
-      for(j = 0;j<14;j++){
-        if(files[i*16 + 2 + j] != filename[j]){
-          beda = 1;
-          break;
-        }
-      }
-      if(beda) continue;
-
-      sama = 1;
-      break;
-    }
-  }
-
-  if(sama){
-    printString("File sudah ada!\n");
-    return;
-  }
-
-  // mencari sector index yang kosong
-  for(i = 0;i<32;i++){
-    if(sectors[i*16]==0x0){
-      entryIndex = i;
-      break;
-    }
-  }
-
-  // cek apakah terdapat entri yang masih kosong
-  for(i = 0;i<64;i++){
-    if(files[i*16 + 2] == 0x0){
-      entryFile = i;
-      break;
-    }
-  }
-
-  // cek sector yang masih kosong
-  j = 0;
-  for(i = 0;i<512;i++){
-    if(map[i] == 0x0){
-      freeSector[j++] = i;
-    }
-  }
-
-  // sector yang dibutuhkan oleh buffer
-
-  k = 0;
-  i = 0;
-  while(buffer[k] != 0x0){
-    i++;
-    k+=512;
-  }
-
-  if(i > j){
-    *sectors = 0;
-    printString("Alokasi gagal!!\n");
-    return;
-  }
-
-  files[entryFile*16] = idxParent;
-  files[entryFile*16 + 1] = entryIndex;
-
-  for(i = 0; i<14;i++){
-    files[entryFile*16 + 2 + i] = filename[j];
-  }
-
-  // mengisi sector yang kosong pada sectors dengan indeks entryIndex;
-  j = 0;
-  i = 0;
-  while(buffer[i] != 0x0){
-    map[freeSector[j]] = 0xFF;
-    sectors[entryIndex*16 + j] = freeSector[j];
-    writeSector(buffer + i, freeSector[j]);
-    j++;
-    i += 512;
-  }
-
-  *sectors = j;
-
-  // pad with 0
-  for(; j<16;j++){
-    sectors[entryIndex*16 + j] = 0x0;
-  }
-
-  writeSector(map, 256);
-  writeSector(files, 257);
-  writeSector(files + 512, 258);
-  writeSector(sectors, 259);
-}
-
-void readFile(char *buffer, char *path, int *result, char parentIndex) {
-    // Deklarasi variabel
-    char dirBuf[1024];
-    char secBuf[512];
-    int isExist, i, iter, rowSector;
-    int sectors[16];
-    // Inisialisasi variabel : Baca sektor dir (sektor 2) (sektor 1 itu map)
+  found = 0;
     
     
-    // copy dir.img to dirBuf
-    readSector(&secBuf, 0x101);
-    for (i = 0; i < 512; i++) {
-        dirBuf[i] = secBuf[i];
-    }
-    readSector(&secBuf, 0x102);
-    for (i = 0; i < 512; i++) {
-        dirBuf[i+512] = secBuf[i];
-    }
+    // TODO : check if folder exists
     
+    
+  // printString("Searching for empty directory :\n\r");
+  while (!found && j < 1024) {
+    if (dir[j] == 0x0 && dir[j + 1] == 0x0 && dir[j + 2] == 0x0) {
+      found = 1;
+    } else {
+      j += 16;
+    }
+  }
+  // Cari apakah nama file ada di dalam dir
+    // Potongan 32 bytes, 12 bytes file name, 20 bytes sector
     isExist = 0;
     i = 0;
-    
-    // Cari apakah nama file ada di dalam dir
-    // Potongan 32 bytes, 12 bytes file name, 20 bytes sector
     while (isExist == 0 && i < 64) {
         // Cek apakah pada terdapat file pada baris ke i
-        if (dirBuf[16 * i] == parentIndex) {
+        if (dir[16 * i] == parentIndex) {
             // writeLine("Same dir!");
-            if (dirBuf[16 * i + 2] != 0x0 && dirBuf[16 * i + 1] != 0xFF) {
+            if (dir[16 * i + 2] != 0x0 && dir[16 * i + 1] != 0xFF) {
                 int curPos = i * 16 + 2;
                 
                 // Terdapat file, cek kesamaan nama
@@ -313,9 +161,9 @@ void readFile(char *buffer, char *path, int *result, char parentIndex) {
                 // printString(filename);
                 // printString("\r\n\0");
                 while (isSame == 1 && j < 14) {
-                    if (dirBuf[j + curPos] != path[j]) {
+                    if (dir[j + curPos] != path[j]) {
                         isSame = 0;
-                    } else if (dirBuf[j + curPos] == '\0' && path[j] == '\0') {
+                    } else if (dir[j + curPos] == '\0' && path[j] == '\0') {
                         j = 13;
                     }
                     j++;
@@ -324,7 +172,8 @@ void readFile(char *buffer, char *path, int *result, char parentIndex) {
                 if (isSame) {
                     // printString("Same!\r\n\0");
                     isExist = 1;
-                    rowSector = dirBuf[i * 16 + 1];
+                    *sectors = -1;
+                    return;
                     // if (dirBuf[i * 16 + 1] == 0x15) { writeLine("On sector 21"); }
                 }
             }
@@ -332,131 +181,188 @@ void readFile(char *buffer, char *path, int *result, char parentIndex) {
         
         i++;
     }
-    if (isExist) {
-        readSector(&secBuf, 0x103);
-        iter = 0;
-        // if (rowSector == 0x15) { writeLine("On sector 21"); }
-        while (iter < 16 && secBuf[rowSector * 16 + iter] != '\0') {
-            char tempBuff[512];
-            readSector(&tempBuff, secBuf[rowSector * 16 + iter]);
-            for (i = 0; i < 512; i++) {
-                buffer[i + 512*iter] = tempBuff[i];
-            }
-            iter++;
-        }
-        *result = 1;
-    } else {
-        *result = -1;
+  // printString("Done Searching\n\r");
+  if (found && !isExist) {
+    int k = 0;
+    int stop = 0;
+    // printString("There is an empty directory\n\r");
+    // printString("Searching for empty sector map\n\r");
+    while (!stop && k < 256) {
+      if (map[k] == 0x0) {
+        stop = 1;
+      } else {
+        k++;
+      }
     }
+    // printString("Done searching\n\r");
+    if ((256 - k) >= 16) {
+      int m, n, o, sectCount;
+      char temp[512];
+      // printString("there is an empty sector\n\r");
+            for (o = 0; o < 32; o++) {
+                if (sector[o*16] == 0x0) break;
+            }
+      for (m = 0; m < 16; m++) {
+        dir[j + m] = 0x0;
+      }
+      for (m = 2; m < 16; m++) {
+                dir[j + m] = path[m - 2];
+            }
+      // mark entry
+      dir[j] = parentIndex;
+      dir[j + 1] = o;
+      // printString("done renaming\n\r");
+            
+      n = 0;
+      m = 0;
+            sectCount = 0;
+      // printString("putting buffer into sectors\n\r");
+      while (buffer[n] != 0x0) {
+        int l = 0;
+        clear(temp, 512);
+        while (buffer[n] != 0x0 && l < 512) {
+          temp[l] = buffer[n];
+          n++;
+          l++;
+        }
+        map[k] = 0xFF;
+        sector[o * 16 + sectCount] = k;
+        writeSector(temp, k);
+        k++;
+                sectCount++;
+      }
+      writeSector(sector, 0x103);
+      writeSector(dir+512, 0x102);
+      writeSector(dir, 0x101);
+      writeSector(map, 0x100);
+      // printString("DONEEE\n\r");
+            *sectors = 1;
+    } else {
+      //terminate
+            *sectors = -3;
+      return;
+    }
+  } else {
+    //terminate
+        *sectors = -2;
+    return;
+  }
+
+  clear(path, 10);
+  
 }
 
-// void readFile(char *buffer, char *path, int *result, char parentIndex){
-//   char map[512];
-//   char files[512 * 2];
-//   char sectors[512];
+void readFile(char *buffer, char *path, int *result, char parentIndex){
+char map[512];
+char files[512 * 2];
+char sectors[512];
 
-//   int i,j;
-//   int cnt;
-//   int sect;
-//   int entryIndex;
-//   int idxParent;
+int sama;
+int beda;
+int i,j,k;
+int cnt;
+int sect;
+int entryIndex;
+int idxParent;
+char parent[14];
+char filename[14];
+readSector(files, 257);
+readSector(files + 512, 258);
+readSector(sectors, 259);
 
-//   int sama;
 
-//   char parent[14];
-//   char filename[14];
+for(i = 0;i<14;i++){
+parent[i] = 0x0;
+filename[i] = 0x0;
+}
 
-//   readSector(files, 257);
-//   readSector(files + 512, 258);
-//   readSector(sectors, 259);
-  
-//   for(i = 0;i<14;i++){
-//     parent[i] = 0x0;
-//     filename[i] = 0x0;
-//   }
-  
-//   // mengambil current file name dan current parent name
-//   j = 0;
-//   for(i = 0 ;i < sizeof(path); i++){
-//     if(path[i] != '/'){
-//       filename[j++] = path[i];
-//     }else{
-//       int k;
-//       for(; j < 14; j++){
-//         filename[j] = 0x0;
-//       }
-//       j = 0;
-//       for(k = 0;k<14;k++){
-//         parent[k] = filename[k];
-//       }
-//     }
-//   }
-//   // pad with 0
-//   for(;j<14;j++){
-//     filename[j] = 0x0;
-//   }
+// mengambil current file name dan current parent name
+j = 0;
+printString(path);
+i = 0;
+while(path[i] != 0x0){
+if(path[i] != '/'){
+filename[j++] = path[i];
+}else{
+for(; j < 14; j++){
+filename[j] = 0x0;
+}
+j = 0;
+for(k = 0;k<14;k++){
+parent[k] = filename[k];
+}
+}
+i++;
+}
+printString(filename);
+// pad with 0
+for(;j<14;j++){
+filename[j] = 0x0;
+}
 
-//   // mencari index parent
-//   idxParent = parentIndex;
-//   if(parent[0] != 0x0){
-//     for(i = 0;i<64;i++){
-//       if(files[i*16 + 1] == 0xFF){
-//         int beda = 0;
-//         for(j = 0;j<14;j++){
-//           if(files[i*16 + 2 + j] != parent[j]){
-//             beda = 1;
-//             break;
-//           }
-//         }
-//         if(beda){
-//           continue;
-//         }
-//         idxParent = files[i*16];
-//       }
-//     }
-//   }
+// mencari index parent
+idxParent = parentIndex;
+if(parent[0] != 0x0){
+for(i = 0;i<64;i++){
+if(files[i*16 + 1] == 0xFF){
+beda = 0;
+for(j = 0;j<14;j++){
+if(files[i*16 + 2 + j] != parent[j]){
+beda = 1;
+break;
+}
+}
+if(beda){
+continue;
+}
+idxParent = files[i*16];
+}
+}
+}
 
-//   // mencari apakah ada file yang sama
-//   sama = 0;
-//   for(i = 0;i<64;i++){
-//     if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
-//       int beda = 0;
-//       for(j = 0;j<14;j++){
-//         if(files[i*16 + 2 + j] != filename[j]){
-//           beda = 1;
-//           break;
-//         }
-//       }
-//       if(beda) continue;
+// mencari apakah ada file yang sama
+sama = 0;
+for(i = 0;i<64;i++){
+if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
+beda = 0;
+for(j = 0;j<14;j++){
+if(files[i*16 + 2 + j] != filename[j]){
+beda = 1;
+break;
+}
+}
+if(beda) continue;
 
-//       sama = 1;
-//       entryIndex = files[i*16 + 1];
-//       break;
-//     }
-//   }
+sama = 1;
+entryIndex = files[i*16 + 1];
+break;
+}
+}
 
-//   if(!sama){
-//     *result = 0;
-//     printString("Tidak ada file yang memenuhi!\n");
-//     return;
-//   }
+if(!sama){
+*result = 0;
+printString("Tidak ada file yang memenuhi!\n");
+return;
+}
 
-//   cnt = 0;
+cnt = 0;
 
-//   for(i = 0;i<16;i++){
-//     sect = sectors[entryIndex*16 + i];
+for(i = 0;i<16;i++){
+sect = sectors[entryIndex*16 + i];
 
-//     if(sect == 0){
-//       break;
-//     }
+if(sect == 0){
+break;
+}
 
-//     readSector(buffer + cnt, sect);
-//     cnt = cnt + 512;
-//   }
+readSector(buffer + cnt, sect);
+cnt = cnt + 512;
+}
 
-//   *result = 1;
-//   printString("File berhasil dimuat!\n");
-// }
+*result = 1;
+printString("File berhasil dimuat!\n");
+}
+
+
 
 void clear(char *buffer, int length)
 {
