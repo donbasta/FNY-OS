@@ -3,14 +3,15 @@ int isDir(char *dirPath);
 int isFile(char *filePath);
 void charRemnant(char *str, char *target, int i);
 void showFolderContent(char* str);
+int cekNamaFile(char* files, char* buff, int i);
+void printNumber(int a);
 
-int curDir;
 char buff[100];
 char absPath[100];
 
-main(){
-	
-	curDir=0xff;
+int main(){
+
+	char curDir;
 
 	printString("\n\n\r");
 	printString("Selamat datang di shell v.0.1\n\r");
@@ -18,22 +19,25 @@ main(){
 	printString("/");
 	printString("$ ");
 
+	curDir = 0xff;
 
 	while(1){
 
 		interrupt(0x21,1,buff,0,0);
-		bacaInput(buff);
+		bacaInput(buff, &curDir);
 		printString("\n\r");
 		printString("fny_os@bapak_imba:");
 		// printString(path(curDir));
 		printString("$ ");
-		clear(buff);
+		clear(buff,100);
+		// printString(buff);
+		printNumber(curDir);
 
 	}
 
 }
 
-void bacaInput(char* buff){
+void bacaInput(char* buff, char* curDir){
 
 	char map[512];
   char files[512 * 2];
@@ -52,15 +56,13 @@ void bacaInput(char* buff){
 	readSector(files + 512, 258);
 	readSector(sectors, 259);
 
-	while(baca){
-		if(buff[idx]==0x0){
-			baca = 0;
-		} else {
-			idx = idx+1;
-		}
-	}
-
-	// printString(buff);
+	// while(baca){
+	// 	if(buff[idx]==0x0){
+	// 		baca = 0;
+	// 	} else {
+	// 		idx = idx+1;
+	// 	}
+	// }
 
 	if(strcmp(buff,"halo")){
 		printString("\n\r");
@@ -106,7 +108,7 @@ void bacaInput(char* buff){
 			}
 			option[j] = 0x0;
 
-			for(i = 0; i < 512 * 2; i = i+16){
+			for(i = 0; i < 512 * 2; i = i + 16){
 				if(files[i]==0x0 && files[i+1]==0x0 && files[i+2]==0x0){
 					entryIdx = i;
 					break;
@@ -118,7 +120,7 @@ void bacaInput(char* buff){
 				return;
 			}
 
-			files[entryIdx] = curDir;
+			files[entryIdx] = *curDir;
 			files[entryIdx+1] = 0xff;
 			for(i=0; i<14; i++){
 				files[entryIdx + i + 2] = option[i];
@@ -149,7 +151,7 @@ void bacaInput(char* buff){
 		//for changing directories
 
 	  if(buff[2]==0x0){
-	  	curDir = 0xff;
+	  	*curDir = 0xff;
 	  } else if(buff[2]==' '){
 	  	idx = 3;
 			j = 0;
@@ -161,17 +163,18 @@ void bacaInput(char* buff){
 				} else {
 					pathParams[j] = 0x0;
 					if(strcmp(pathParams,"..")){
-						curDir = files[curDir * 16];
+						*curDir = files[(*curDir) * 16];
 					} else {
 						i = 0;
 						while(i<64 && cekNamaFile(files, pathParams, i) == 0){
 							i++;
 						}
 						if(i == 64) {
+							printString("\r\n");
 							printString("path tidak valid");
 							break;
 						} else {
-							curDir = i;
+							*curDir = i;
 						}
 					}
 					clear(pathParams);
@@ -181,16 +184,17 @@ void bacaInput(char* buff){
 			}
 			pathParams[j] = 0x0;
 			if(strcmp(pathParams,"..")){
-				curDir = files[curDir * 16];
+				*curDir = files[(*curDir) * 16];
 			} else {
 				i = 0;
-				while(i<64 && cekNamaFile(files, pathParams, i) == 0){
+				while(i<64 && files[i*16] != *curDir && cekNamaFile(files, pathParams, i) == 0){
 					i++;
 				}
 				if(i == 64) {
+					printString("\r\n");
 					printString("path tidak valid");
 				} else {
-					curDir = i;
+					*curDir = i;
 				}
 			}
 	  }
@@ -204,7 +208,7 @@ void bacaInput(char* buff){
 	  readSector(sectors, 259);
 
 	  printString("\n\r");
-	  showFolderContent();
+	  showFolderContent(*curDir);
 
 	}
 
@@ -380,7 +384,7 @@ void charRemnant(char *str, char *target, int i){
 
 // }
 
-void showFolderContent(){
+void showFolderContent(int curDir){
 
 	char files[512 * 2];
 	char filename[20];
@@ -405,7 +409,7 @@ void showFolderContent(){
 int cekNamaFile(char* files, char* buff, int i){
 
 	int j;
-	char filename[14];
+	char filename[20];
 	int k = 0;
 
 	for(j=2; j<16; j++){
@@ -413,11 +417,41 @@ int cekNamaFile(char* files, char* buff, int i){
 	}
 
 	filename[k] = 0x0;
-	files[i*16+j] = 0x0;
+	// files[i*16+j] = 0x0;
 
 	if(strcmp(filename, buff)){
 		return 1;
 	} else {
 		return 0;
 	}
+}
+
+void printNumber(int a){
+
+	char pad = 0xe;
+	int digit[10];
+
+	int satuan = mod(a, 10);
+  int temp = div(a, 10);
+  int puluhan = mod(temp, 10);
+  int ratusan = div(temp, 10);
+
+	digit[0] = pad * 0x100 + '0';
+  digit[1] = pad * 0x100 + '1';
+  digit[2] = pad * 0x100 + '2';
+  digit[3] = pad * 0x100 + '3';
+  digit[4] = pad * 0x100 + '4';
+  digit[5] = pad * 0x100 + '5';
+  digit[6] = pad * 0x100 + '6';
+  digit[7] = pad * 0x100 + '7';
+  digit[8] = pad * 0x100 + '8';
+  digit[9] = pad * 0x100 + '9';
+
+	
+
+  interrupt(0x10, digit[ratusan], 0x0, 0x0, 0x0); // interrupt digit puluhan
+  interrupt(0x10, digit[puluhan], 0x0, 0x0, 0x0); // interrupt digit satuan
+  interrupt(0x10, digit[satuan], 0x0, 0x0, 0x0); // interrupt digit satuan
+ 	printString("\r\n");
+  
 }
