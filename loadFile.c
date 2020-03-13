@@ -44,18 +44,22 @@ void main(int argc, char* argv[]) {
   fseek(floppy,512 * 0x103, SEEK_SET);
   for(i = 0;i < 512;i++) sectors[i] = fgetc(floppy);
 
-  int entryIndex;
+  
   // find a free entry in the directory
   for (i = 0; i < 512 * 2; i = i + 0x10)
-    if (files[i + 2] == 0) break;
+    if (files[i] == 0 && files[i+1] == 0 && files[i + 2] == 0) break;
     
   if (i == 512 * 2) {
-    printf("Not enough room in directory\n");
+    printf("Not enough room in directory lol\n");
     return;
   }
+
+  int dirindex = i;
+
+  int entryIndex;
   // cari indeks sektor yang kosong pada sectors
-  for(i = 0;i<32;i++){
-    if(sectors[i*32] == 0){
+  for(i = 0; i < 32; i++){
+    if(sectors[i * 16] == 0){
       entryIndex = i;
       break;
     }
@@ -65,16 +69,15 @@ void main(int argc, char* argv[]) {
     return;
   }
 
-  int dirindex = i;
-
   files[dirindex + 1] = entryIndex;
-  // fill the name field with 00s first
   files[dirindex] = 0xFF; //asumsi parentnya root
-  for (i = 1; i < 16; i++) files[dirindex + i] = 0x00;
+
+  // fill the name field with 00s first
+  for (i = 0; i < 14; i++) files[dirindex + i + 2] = 0x00;
   // copy the name over
-  for (i = 2; i < 16; i++) {
+  for (i = 0; i < 14; i++) {
     if (argv[1][i] == 0) break;
-    files[dirindex + i] = argv[1][i];
+    files[dirindex + i + 2] = argv[1][i];
   }
 
   // find free sectors and add them to the file
