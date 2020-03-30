@@ -1,6 +1,16 @@
-#ifndef _DIVMOD_H
-#define _DIVMOD_H
+#ifndef DIVMOD_H
+#define DIVMOD_H
 
-int div(int a, int b);
-int mod(int a, int b);
+
+int div(int a, int b)
+{
+  return a / b;
+}
+
+int mod(int a, int b)
+{
+  return a - (a / b) * b;
+}
+
+
 #endif
