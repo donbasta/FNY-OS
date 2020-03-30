@@ -325,7 +325,7 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
 
   int sama;
   int beda;
-  int i,j,k;
+  int i,j,k,l,m,n;
   int cnt;
   int sect;
   int entryIndex;
@@ -345,6 +345,7 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
   // mengambil current file name dan current parent name
   j = 0;
   i = 0;
+  idxParent = parentIndex;
   while(path[i] != 0x0){
     if(path[i] != '/'){
       filename[j++] = path[i];
@@ -356,6 +357,27 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
       for(k = 0;k<14;k++){
         parent[k] = filename[k];
       }
+      for(l = 0;l < 64;l++){
+        if(files[l*16 + 1] == 0xFF){
+          beda = 0;
+          for(m = 0;m<14;m++){
+            if(files[l*16 + 2 + m] != parent[m]){
+              beda = 1;
+              break;
+            }
+          }
+
+          if(beda) continue;
+
+          if(files[l*16] == idxParent){
+            idxParent = files[l*16];
+          }else{
+            *result = -1;
+            printString("File tidak ditemukan\n");
+            return;
+          }
+        }
+      }
     }
     i++;
   }
@@ -363,26 +385,6 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
   // pad with 0
   for(;j<14;j++){
     filename[j] = 0x0;
-  }
-
-  // mencari index parent
-  idxParent = parentIndex;
-  if(parent[0] != 0x0){
-    for(i = 0;i<64;i++){
-      if(files[i*16 + 1] == 0xFF){
-        beda = 0;
-        for(j = 0;j<14;j++){
-          if(files[i*16 + 2 + j] != parent[j]){
-            beda = 1;
-            break;
-          }
-        }
-        if(beda){
-          continue;
-        }
-        idxParent = files[i*16];
-      }
-    }
   }
 
   // mencari apakah ada file yang sama
