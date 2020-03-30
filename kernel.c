@@ -153,124 +153,162 @@ void writeSector(char *buffer, int sector)
   interrupt(0x13, 0x301, buffer, div(sector, 36) * 0x100 + mod(sector, 18) + 1, mod(div(sector, 18), 2) * 0x100);
 }
 
-void writeFile(char *buffer, char *path, int *sectors, char parentIndex) {
+void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   char map[512];
-  char files[1024];
-  char sector[512];
-  char buf[512];
-  int i;
-  int j;
-  int k;
-  int l;
-  int m;
-  int n;
-  int ada;
-  int sect;
-  int pos;
-  int sama;
+  char files[512 * 2];
+  char sectors[512];
 
+  int i,j,k;
+  int entryIndex;
+  int entryFile;
+  int sama;
+  int beda;
+
+  char parent[14];
+  char filename[14];
+  char idxParent;
 
   readSector(map, 256);
   readSector(files, 257);
   readSector(files + 512, 258);
-  readSector(sector, 259);
+  readSector(sectors, 259);
 
-  j = 0;
-  l = 0;
-    
-  while (!l && j<64) {
-    if (files[j*16] == 0x0 && files[j*16 + 1] == 0x0 && files[j*16 + 2] == 0x0) {
-      l = 1;
-    } else {
-      j++;
-    }
+  for(i = 0;i<14;i++){
+    parent[i] = 0x0;
+    filename[i] = 0x0;
   }
-
-    ada = 0;
-    i = 0;
-    while (ada == 0 && i < 64) {
-
-        if (files[16 * i] == parentIndex) {
-          
-            if (files[16 * i + 2] != 0x0 && files[16 * i + 1] != 0xff) {
-                j = 0;
-                sama = 1;             
-                while (sama == 1 && j < 14) {
-                    if (files[j + 16*i + 2] != path[j]) {
-                        sama = 0;
-                    } else if (files[j + 16*i + 2] == 0x0 && path[j] == 0x0) {
-                        j = 13;
-                    }
-                    j++;
-                }
-
-                if (sama) {
-                    ada = 1;
-                    *sectors = -1;
-                    return;
-                }
-            }
-        }
-        
-        i++;
-    }
-
-  if (l && !ada) {
-    k = 0;
-    pos = 0;
-    while (!pos && k < 256) {
-      if (map[k] == 0x0) {
-        pos = 1;
-      } else {
-        k++;
-      }
-    }
-    if (240 >= k) {
-            for (i = 0; i < 32; i++) {
-                if (sector[i*16] == 0x0) break;
-            }
-      for (m = 0; m < 16; m++) {
-        files[j + m] = 0x0;
-      }
-      for (m = 2; m < 16; m++) {
-                files[j + m] = path[m - 2];
-            }
-      files[j] = parentIndex;
-      files[j + 1] = i;
-            
-      n = 0;
-      m = 0;
-      sect = 0;
-      while (buffer[n] != 0x0) {
-        int l = 0;
-        clear(buf, 512);
-        while (buffer[n] != 0x0 && l < 512) {
-          buf[l] = buffer[n];
-          n++;
-          l++;
-        }
-        map[k] = 0xff;
-        sector[i * 16 + sect] = k;
-        writeSector(buf, k);
-        k++;
-        sect++;
-      }
-      
-      writeSector(map, 256);
-      writeSector(files, 257);
-      writeSector(files+512, 258);
-      writeSector(sector, 259);
-
-            *sectors = 1;
-    } else {
-            *sectors = -3;
-    }
-  } else {
-        *sectors = -2;
-  }
-
-  clear(path, 10);
   
+  // mengambil current file name dan current parent name
+  j = 0;
+  for(i = 0 ;i < sizeof(path); i++){
+    if(path[i] != '/'){
+      filename[j++] = path[i];
+    }else{
+      for(; j < 14; j++){
+        filename[j] = 0x0;
+      }
+      j = 0;
+      for(k = 0;k<14;k++){
+        parent[k] = filename[k];
+      }
+    }
+  }
+  // pad with 0
+  for(;j<14;j++){
+    filename[j] = 0x0;
+  }
+
+  // mencari index parent
+  idxParent = parentIndex;
+  if(parent[0] != 0x0){
+    for(i = 0;i<64;i++){
+      if(files[i*16 + 1] == 0xFF){
+        int beda = 0;
+        for(j = 0;j<14;j++){
+          if(files[i*16 + 2 + j] != parent[j]){
+            beda = 1;
+            break;
+          }
+        }
+        if(beda){
+          continue;
+        }
+        idxParent = files[i*16];
+      }
+    }
+  }
+
+  // mencari apakah ada file yang sama
+  sama = 0;
+  for(i = 0;i<64;i++){
+    if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
+      beda = 0;
+      for(j = 0;j<14;j++){
+        if(files[i*16 + 2 + j] != filename[j]){
+          beda = 1;
+          break;
+        }
+      }
+      if(beda) continue;
+
+      sama = 1;
+      break;
+    }
+  }
+
+  if(sama){
+    printString("File sudah ada!\n");
+    return;
+  }
+
+  // mencari sector index yang kosong
+  for(i = 0;i<32;i++){
+    if(sectors[i*16]==0x0){
+      entryIndex = i;
+      break;
+    }
+  }
+
+  // cek apakah terdapat entri yang masih kosong
+  for(i = 0;i<64;i++){
+    if(files[i*16 + 2] == 0x0){
+      entryFile = i;
+      break;
+    }
+  }
+
+  // cek sector yang masih kosong
+  j = 0;
+  for(i = 0;i<512;i++){
+    if(map[i] == 0x0){
+      freeSector[j++] = i;
+    }
+  }
+
+  // sector yang dibutuhkan oleh buffer
+
+  k = 0;
+  i = 0;
+  while(buffer[k] != 0x0){
+    i++;
+    k+=512;
+  }
+
+  if(i > j){
+    *sectors = 0;
+    printString("Alokasi gagal!!\n");
+    return;
+  }
+
+  files[entryFile*16] = idxParent;
+  files[entryFile*16 + 1] = entryIndex;
+
+  for(i = 0; i<14;i++){
+    files[entryFile*16 + 2 + i] = filename[j];
+  }
+
+  // mengisi sector yang kosong pada sectors dengan indeks entryIndex;
+  j = 0;
+  i = 0;
+  while(buffer[i] != 0x0){
+    map[freeSector[j]] = 0xFF;
+    sectors[entryIndex*16 + j] = freeSector[j];
+    writeSector(buffer + i, freeSector[j]);
+    j++;
+    i += 512;
+  }
+
+  *sectors = j;
+
+  // pad with 0
+  for(; j<16;j++){
+    sectors[entryIndex*16 + j] = 0x0;
+  }
+
+  writeSector(map, 256);
+  writeSector(files, 257);
+  writeSector(files + 512, 258);
+  writeSector(sectors, 259);
 }
 
 void readFile(char *buffer, char *path, int *result, char parentIndex){
@@ -299,7 +337,6 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
 
   // mengambil current file name dan current parent name
   j = 0;
-  printString(path);
   i = 0;
   while(path[i] != 0x0){
     if(path[i] != '/'){
@@ -315,7 +352,7 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
     }
     i++;
   }
-  printString(filename);
+
   // pad with 0
   for(;j<14;j++){
     filename[j] = 0x0;
