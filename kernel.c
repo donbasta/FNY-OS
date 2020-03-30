@@ -237,6 +237,7 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   }
 
   if(sama){
+    *sectors = -1;
     printString("File sudah ada!\n");
     return;
   }
@@ -250,6 +251,7 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   }
 
   // cek apakah terdapat entri yang masih kosong
+  entryFile = -1;
   for(i = 0;i<64;i++){
     if(files[i*16 + 2] == 0x0){
       entryFile = i;
@@ -257,6 +259,11 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
     }
   }
 
+  if(entryFile == -1){
+    *sectors = -2;
+    printString("Tidak cukup entri di files");
+    return;
+  }
   // cek sector yang masih kosong
   j = 0;
   for(i = 0;i<512;i++){
@@ -275,7 +282,7 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   }
 
   if(i > j){
-    *sectors = 0;
+    *sectors = -3;
     printString("Alokasi gagal!!\n");
     return;
   }
@@ -398,7 +405,7 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
   }
 
   if(!sama){
-    *result = 0;
+    *result = -1;
     printString("Tidak ada file yang memenuhi!\n");
     return;
   }
