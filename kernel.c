@@ -158,7 +158,7 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   char files[512 * 2];
   char sectors[512];
 
-  int i,j,k;
+  int i,j,k,l,m;
   int entryIndex;
   int entryFile;
   int sama;
@@ -179,8 +179,10 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   }
   
   // mengambil current file name dan current parent name
+  i = 0;
   j = 0;
-  for(i = 0 ;i < sizeof(path); i++){
+  idxParent = parentIndex;
+  while(path[i] != 0x0){
     if(path[i] != '/'){
       filename[j++] = path[i];
     }else{
@@ -191,32 +193,54 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
       for(k = 0;k<14;k++){
         parent[k] = filename[k];
       }
+      for(l = 0;l < 64;l++){
+        if(files[l*16 + 1] == 0xFF){
+          beda = 0;
+          for(m = 0;m<14;m++){
+            if(files[l*16 + 2 + m] != parent[m]){
+              beda = 1;
+              break;
+            }
+          }
+
+          if(beda) continue;
+
+          if(files[l*16] == idxParent){
+            idxParent = files[l*16];
+          }else{
+            *sectors = -4;
+            printString("Folder tidak valid\n");
+            return;
+          }
+        }
+      }
     }
+    i++;
   }
   // pad with 0
   for(;j<14;j++){
     filename[j] = 0x0;
   }
 
-  // mencari index parent
-  idxParent = parentIndex;
-  if(parent[0] != 0x0){
-    for(i = 0;i<64;i++){
-      if(files[i*16 + 1] == 0xFF){
-        int beda = 0;
-        for(j = 0;j<14;j++){
-          if(files[i*16 + 2 + j] != parent[j]){
-            beda = 1;
-            break;
-          }
-        }
-        if(beda){
-          continue;
-        }
-        idxParent = files[i*16];
-      }
-    }
-  }
+  // // mencari index parent
+  // idxParent = parentIndex;
+  // if(parent[0] != 0x0){
+  //   for(i = 0;i<64;i++){
+  //     if(files[i*16 + 1] == 0xFF){
+  //       int beda = 0;
+  //       for(j = 0;j<14;j++){
+  //         if(files[i*16 + 2 + j] != parent[j]){
+  //           beda = 1;
+  //           break;
+  //         }
+  //       }
+  //       if(beda){
+  //         continue;
+  //       }
+  //       idxParent = files[i*16];
+  //     }
+  //   }
+  // }
 
   // mencari apakah ada file yang sama
   sama = 0;
