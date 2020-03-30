@@ -274,113 +274,113 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex) {
 }
 
 void readFile(char *buffer, char *path, int *result, char parentIndex){
-char map[512];
-char files[512 * 2];
-char sectors[512];
+  char map[512];
+  char files[512 * 2];
+  char sectors[512];
 
-int sama;
-int beda;
-int i,j,k;
-int cnt;
-int sect;
-int entryIndex;
-int idxParent;
-char parent[14];
-char filename[14];
-readSector(files, 257);
-readSector(files + 512, 258);
-readSector(sectors, 259);
+  int sama;
+  int beda;
+  int i,j,k;
+  int cnt;
+  int sect;
+  int entryIndex;
+  int idxParent;
+  char parent[14];
+  char filename[14];
+  readSector(files, 257);
+  readSector(files + 512, 258);
+  readSector(sectors, 259);
 
 
-for(i = 0;i<14;i++){
-parent[i] = 0x0;
-filename[i] = 0x0;
-}
+  for(i = 0;i<14;i++){
+    parent[i] = 0x0;
+    filename[i] = 0x0;
+  }
 
-// mengambil current file name dan current parent name
-j = 0;
-printString(path);
-i = 0;
-while(path[i] != 0x0){
-if(path[i] != '/'){
-filename[j++] = path[i];
-}else{
-for(; j < 14; j++){
-filename[j] = 0x0;
-}
-j = 0;
-for(k = 0;k<14;k++){
-parent[k] = filename[k];
-}
-}
-i++;
-}
-printString(filename);
-// pad with 0
-for(;j<14;j++){
-filename[j] = 0x0;
-}
+  // mengambil current file name dan current parent name
+  j = 0;
+  printString(path);
+  i = 0;
+  while(path[i] != 0x0){
+    if(path[i] != '/'){
+      filename[j++] = path[i];
+    }else{
+      for(; j < 14; j++){
+        filename[j] = 0x0;
+      }
+      j = 0;
+      for(k = 0;k<14;k++){
+        parent[k] = filename[k];
+      }
+    }
+    i++;
+  }
+  printString(filename);
+  // pad with 0
+  for(;j<14;j++){
+    filename[j] = 0x0;
+  }
 
-// mencari index parent
-idxParent = parentIndex;
-if(parent[0] != 0x0){
-for(i = 0;i<64;i++){
-if(files[i*16 + 1] == 0xFF){
-beda = 0;
-for(j = 0;j<14;j++){
-if(files[i*16 + 2 + j] != parent[j]){
-beda = 1;
-break;
-}
-}
-if(beda){
-continue;
-}
-idxParent = files[i*16];
-}
-}
-}
+  // mencari index parent
+  idxParent = parentIndex;
+  if(parent[0] != 0x0){
+    for(i = 0;i<64;i++){
+      if(files[i*16 + 1] == 0xFF){
+        beda = 0;
+        for(j = 0;j<14;j++){
+          if(files[i*16 + 2 + j] != parent[j]){
+            beda = 1;
+            break;
+          }
+        }
+        if(beda){
+          continue;
+        }
+        idxParent = files[i*16];
+      }
+    }
+  }
 
-// mencari apakah ada file yang sama
-sama = 0;
-for(i = 0;i<64;i++){
-if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
-beda = 0;
-for(j = 0;j<14;j++){
-if(files[i*16 + 2 + j] != filename[j]){
-beda = 1;
-break;
-}
-}
-if(beda) continue;
+  // mencari apakah ada file yang sama
+  sama = 0;
+  for(i = 0;i<64;i++){
+    if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
+      beda = 0;
+      for(j = 0;j<14;j++){
+        if(files[i*16 + 2 + j] != filename[j]){
+          beda = 1;
+          break;
+        }
+      }
+      if(beda) continue;
 
-sama = 1;
-entryIndex = files[i*16 + 1];
-break;
-}
-}
+      sama = 1;
+      entryIndex = files[i*16 + 1];
+      break;
+    }
+  }
 
-if(!sama){
-*result = 0;
-printString("Tidak ada file yang memenuhi!\n");
-return;
-}
+  if(!sama){
+    *result = 0;
+    printString("Tidak ada file yang memenuhi!\n");
+    return;
+  }
 
-cnt = 0;
+  cnt = 0;
 
-for(i = 0;i<16;i++){
-sect = sectors[entryIndex*16 + i];
+  for(i = 0;i<16;i++){
+    sect = sectors[entryIndex*16 + i];
 
-if(sect == 0){
-break;
-}
+    if(sect == 0){
+      break;
+    }
 
-readSector(buffer + cnt, sect);
-cnt = cnt + 512;
-}
+    readSector(buffer + cnt, sect);
+    cnt = cnt + 512;
+  }
 
-*result = 1;
-printString("File berhasil dimuat!\n");
+  *result = 1;
+  printString("File berhasil dimuat!\n");
 }
 
 
