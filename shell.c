@@ -14,7 +14,7 @@ int main(){
 
 	char curDir;
 	int i;
-
+	makeInterrupt21();
 	printString("\n\n\r");
 	printString("Selamat datang di shell v.0.1\n\r");
 	printString("fny_os@bapak_imba:");

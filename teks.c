@@ -1,4 +1,3 @@
-#include "teks.h"
 
 void printString(char *string)
 {
