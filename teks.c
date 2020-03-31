@@ -21,7 +21,6 @@ void printString(char *string)
 
 void readString(char *string)
 {
-  STATUS = '\0';
   int ptr = 0;
   char ch = 0x0;
 

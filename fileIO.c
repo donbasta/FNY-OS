@@ -1,3 +1,7 @@
+char map[512];
+char files[512 * 2];
+char sectors[512];
+char freeSector[512];
 
 void deleteFile(char *path, int *sectors, char parentIndex){
   char map[512];
