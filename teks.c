@@ -54,10 +54,10 @@ void readString(char *string)
         STATUS = 'T';
         break;
     }
-    else if(ch == 0x8){ // kalau neken tombol LEFT
+    else if(ch == 0x8){ // kalau neken tombol <-
         
     }
-    else if(ch == 0x8){ // kalau neken tombol RIGHT
+    else if(ch == 0x8){ // kalau neken tombol ->
         
     }
     else

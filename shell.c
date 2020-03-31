@@ -90,7 +90,7 @@ void bacaInput(char* buff, char* curDir){
 		else if(STATUS == 'T'){
 
 		}
-		
+
 		if(cnt!=-999){
 			for(i=0;cmd[i]!='\0';i++){
 			cmd[i] = history[tail][i];
@@ -322,6 +322,8 @@ void bacaInput(char* buff, char* curDir){
 	return;
 
 }
+
+
 
 int strcmp(char* s1, char* s2){
 	for(; *s1 == *s2; ++s1, ++s2){
