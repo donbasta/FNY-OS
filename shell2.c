@@ -11,13 +11,12 @@ char buff[100];
 char absPath[100];
 char history[100][100];
 char cmd[100];
-int cnt=-999, head = 0, tail=0;
+int cnt=-999, head = 0, tail = 0;
 
 // Kalo dah ada include apus aja
 char STATUS = '\0';
 
 int main(){
-
 	char curDir;
 	int i;
 	makeInterrupt21();
@@ -43,9 +42,7 @@ int main(){
 		generatePath(curDir);
 		printString("$ ");
 		// printNumber(curDir);
-
 	}
-
 }
 
 void bacaInput(char* buff, char* curDir){
@@ -88,7 +85,7 @@ void bacaInput(char* buff, char* curDir){
 				cnt = -999;
 		}
 		else if(STATUS == 'T'){
-
+            showSuggestion(buff, option, files);
 		}
 
 		if(cnt!=-999){
@@ -149,6 +146,12 @@ void bacaInput(char* buff, char* curDir){
 		cnt = -999;
 	}
 	return;
+}
+
+void showSuggestion(char *buff, char *option, char *files){
+    int idx, i, j;
+
+
 }
 
 void echoText(char *buff, char *option){
