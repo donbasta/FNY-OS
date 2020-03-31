@@ -1,4 +1,4 @@
-char STATUS = '\0';
+char STATUS;
 
 void printString(char *string)
 {
@@ -41,7 +41,7 @@ void readString(char *string)
       else
         continue;
     }
-    else if(ch == 0x8){ // kalau neken tombol up
+    else if(ch == 0x0){ // kalau neken tombol up
         STATUS = 'U';
         break;
     }
