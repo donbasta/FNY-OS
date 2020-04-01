@@ -1,8 +1,3 @@
-char map[512];
-char files[512 * 2];
-char sectors[512];
-char freeSector[512];
-
 void deleteFile(char *path, int *sectors, char parentIndex){
   char map[512];
   char files[512 * 2];
@@ -15,7 +10,7 @@ void deleteFile(char *path, int *sectors, char parentIndex){
   int cnt;
   int sect;
   int entryIndex;
-  int idxParent;
+  char idxParent;
   char parent[14];
   char filename[14];
   readSector(map, 256);
@@ -39,7 +34,7 @@ void deleteFile(char *path, int *sectors, char parentIndex){
       for(; j < 14; j++){
         filename[j] = 0x0;
       }
-      j = 0;
+      // j = 0;
       for(k = 0;k<14;k++){
         parent[k] = filename[k];
       }
@@ -123,6 +118,7 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   char map[512];
   char files[512 * 2];
   char sectors[512];
+  char freeSector[512];
 
   int i,j,k;
   int entryIndex;

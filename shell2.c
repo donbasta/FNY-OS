@@ -14,7 +14,7 @@ char cmd[100];
 int cnt=-999, head = 0, tail = 0;
 
 // Kalo dah ada include apus aja
-extern char STATUS;
+char STATUS = '\0';
 
 int main(){
 	char curDir;
@@ -38,7 +38,7 @@ int main(){
 		readString(buff);
 		bacaInput(buff, &curDir);
 		printString("\n\r");
-		printString("fny_os@bapak_imba:");
+		printString("bapak_imba@fny_os:");
 		generatePath(curDir);
 		printString("$ ");
 		// printNumber(curDir);

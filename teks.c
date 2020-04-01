@@ -1,8 +1,7 @@
-char STATUS;
+char stat;
 
 void printString(char *string)
 {
-
   char ah = 0xe;
   int al;
   int ax;
@@ -23,6 +22,7 @@ void readString(char *string)
 {
   int ptr = 0;
   char ch = 0x0;
+  stat = '\0';
 
   while (1)
   {
@@ -41,16 +41,16 @@ void readString(char *string)
       else
         continue;
     }
-    else if(ch == 0x0){ // kalau neken tombol up
-        STATUS = 'U';
+    else if(ch == 0x8){ // kalau neken tombol up
+        stat = 'U';
         break;
     }
     else if(ch == 0x8){ // kalau neken tombol down
-        STATUS = 'D';
+        stat = 'D';
         break;
     }
     else if(ch == 0x8){ // kalau neken tombol tab
-        STATUS = 'T';
+        stat = 'T';
         break;
     }
     else if(ch == 0x8){ // kalau neken tombol <-

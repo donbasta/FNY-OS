@@ -1,52 +1,13 @@
-void bacaInput(char *buff);
-int isDir(char *dirPath);
-int isFile(char *filePath);
-void charRemnant(char *str, char *target, int i);
-void showFolderContent(char* str);
-int cekNamaFile(char* files, char* buff, int i);
-void printNumber(int a);
-void generatePath(char curDir);
+void echoText(char* buff, char* option);
+void makeDir(char *buff, char *option, char *files, char *curDir);
+void executeFile(char *buff, char *option, char *files, char *curDir, int *success);
+void changeDir(char *buff, char *files, char *curDir);
+void traverseDir(int curDir);
 
-char buff[100];
-char absPath[100];
+char stat;
 char history[100][100];
 char cmd[100];
 int cnt=-999, head = 0, tail=0;
-
-// Kalo dah ada include apus aja
-extern char STATUS;
-
-int main(){
-
-	char curDir;
-	int i;
-	makeInterrupt21();
-	printString("\n\n\r");
-	printString("Selamat datang di shell v.0.1\n\r");
-	printString("fny_os@bapak_imba:");
-	// printString("/");
-	printString("/");
-	printString("$ ");
-
-	curDir = 0xff;
-
-	while(1){
-
-		// interrupt(0x21,1,buff,0,0);
-		for(i = 0; i<100; i++){
-			buff[i] = 0x0;
-		}
-		readString(buff);
-		bacaInput(buff, &curDir);
-		printString("\n\r");
-		printString("fny_os@bapak_imba:");
-		generatePath(curDir);
-		printString("$ ");
-		// printNumber(curDir);
-
-	}
-
-}
 
 void bacaInput(char* buff, char* curDir){
 
@@ -66,8 +27,8 @@ void bacaInput(char* buff, char* curDir){
 	readSector(files + 512, 258);
 	readSector(sectors, 259);
 
-	if(STATUS!='\0'){
-		if(STATUS == 'U'){
+	if(stat!='\0'){
+		if(stat == 'U'){
 			//int i;
 			if(cnt ==-999){
 				cnt = tail;
@@ -79,7 +40,7 @@ void bacaInput(char* buff, char* curDir){
 			}
 			cnt = tail;
 		}
-		else if(STATUS == 'D'){
+		else if(stat == 'D'){
 			//int i; 
 			if(cnt !=-999){
 				cnt = mod(cnt+1, 100);
@@ -87,7 +48,7 @@ void bacaInput(char* buff, char* curDir){
 			if(cnt == tail)
 				cnt = -999;
 		}
-		else if(STATUS == 'T'){
+		else if(stat == 'T'){
 
 		}
 
@@ -102,6 +63,7 @@ void bacaInput(char* buff, char* curDir){
 			cmd[0] = '\0';
 		}
 	}
+
 	else{
 		if(strcmp(buff,"halo")){
 			printString("\n\r");
@@ -109,173 +71,260 @@ void bacaInput(char* buff, char* curDir){
 			printString("\r");
 		}
 		else if(buff[0]=='e'&&buff[1]=='c'&&buff[2]=='h'&&buff[3]=='o'){
-			if(buff[4]==0x0){
-				printString("\r\n");
-			} else if(buff[4]==' '){
-				idx = 5;
-				j = 0;
-				while(buff[idx]!=0x0){
-					option[j] = buff[idx];
-					j++;
-					idx++;
-				}
-				option[j] = 0x0;
-				printString("\n\r");
-				printString(option);
-				printString("\r");
-			} else {
-				printString("Command '");
-				printString(buff);
-				printString("' tidak ditemukan!!!\n\r");
-			}	
+			echoText(buff, option);
 		}
 
 		else if(buff[0]=='m'&&buff[1]=='k'&&buff[2]=='d'&&buff[3]=='i'&&buff[4]=='r'){
-
-			int entryIdx;
-
-			if(buff[5]==0x0){
-				printString("\r\n");
-			} else if(buff[5]==' '){
-				idx = 6;
-				j = 0;
-				while(buff[idx]!=0x0){
-					option[j] = buff[idx];
-					j++;
-					idx++;
-				}
-				option[j] = 0x0;
-				for(;j<14;j++){
-					option[j] = 0x0;
-				}
-
-				for(i = 0; i < 512 * 2; i = i + 16){
-					if(files[i]==0x0 && files[i+1]==0x0 && files[i+2]==0x0){
-						entryIdx = i;
-						break;
-					}
-				}
-
-				if(i == 512 * 2){
-					printString("Full memory:(\n\r");
-					return;
-				}
-
-				files[entryIdx] = *curDir;
-				files[entryIdx+1] = 0xff;
-				for(i=0; i<14; i++){
-					files[entryIdx + i + 2] = option[i];
-				}
-
-
-
-			} else {
-				printString("\n\rCommand '");
-				printString(buff);
-				printString("' tidak ditemukan!!!\n\r");
-			}	
+			makeDir(buff, option, files, *curDir);
 		}
 
 		else if(buff[0]=='.'&&buff[1]=='/'){
-
-			idx = 2;
-			j = 0;
-			while(buff[idx]!=0x0){
-				option[j] = buff[idx];
-				j++;
-				idx++;
-			}
-			for(;j<14;j++){
-				option[j] = 0x0;
-			}
-
-			i = 0;
-			while(i<64 && (files[i*16] != *curDir || cekNamaFile(files, option, i) == 0 || files[i*16+1] == 0xff)){
-				i++;
-			}
-			if(i == 64) {
-				printString("\r\n");
-				printString("program tidak valid");
-				return;
-			} else {
-				executeProgram(option, 0x4000, &success);
-			}
-			
+			executeFile(buff, option, files, curDir, &success);
 		}
 
 		else if(buff[0]=='c'&&buff[1]=='d'){
+			changeDir(buff, files, curDir);
+		}
 
-			int dir[512];
-			int i;
-			char filename[20];
-			char pathParams[50];
+		else if(buff[0]=='l'&&buff[1]=='s'){
+			traverseDir(curDir);
+		}
 
-			//for changing directories
+		else if(buff[0]=='m'&&buff[1]=='v'){
 
-			if(buff[2]==0x0){
-				*curDir = 0xff;
-			} else if(buff[2]==' '){
+			char pathParams1[20];
+			char pathParams2[20];
+			int idx1, idx2;
+			int sect;
+
+			//for moving file or renaming file if folder doesn't exist
+
+			if(buff[2]==' '){
 				idx = 3;
 				j = 0;
-				while(buff[idx]!=0x0){
-					if(buff[idx]!='/'){
-						pathParams[j] = buff[idx];
-						j++;
-					} else {
-						pathParams[j] = 0x0;
-						if(strcmp(pathParams,"..")){
-							if(*curDir != 0xff){
-								*curDir = files[(*curDir) * 16];
-							}
-						} else {
-							i = 0;
-							while(i<64 && (files[i*16] != *curDir || files[i*16+1] != 0xff || cekNamaFile(files, pathParams, i) == 0)){
-								i++;
-							}
-							if(i == 64) {
-								printString("\r\n");
-								printString("path tidak valid");
-								break;
-							} else {
-								*curDir = i;
-							}
-						}
-						clear(pathParams);
-						j = 0;
-					}
+				while(buff[idx]!=' '){
+					pathParams1[j] = buff[idx];
+					j++;
 					idx++;
 				}
-				pathParams[j] = 0x0;
-				if(strcmp(pathParams,"..")){
-					if(*curDir != 0xff){
-						*curDir = files[(*curDir) * 16];
-					}
-				} 
-				else {
-					i = 0;
-					while(i<64 && (files[i*16] != *curDir || files[i*16+1] != 0xff || cekNamaFile(files, pathParams, i) == 0)){
-						i++;
-					}
-					if(i == 64) {
-						printString("\r\n");
-						printString("path tidak valid");
+				for(;j<14;j++){
+					pathParams1[j] = 0x0;
+				}
+				idx++;
+				j = 0;
+				while(buff[idx]!=0x0){
+					pathParams2[j] = buff[idx];
+					j++;
+					idx++;
+				}
+				for(;j<14;j++){
+					pathParams2[j] = 0x0;
+				}
+
+				//cari indeks dari file bernama pathParams1 di folder as a (if gaada = -1)
+				//cari indeks dari file bernama pathParams2 di folder as b (if gaada = -1)
+
+				idx1 = -1;
+				idx2 = -1;
+
+				// printNumber(curDir);
+
+				for(i=0; i<64; i++){
+					// if(files[i*16] == curDir && files[i*16+2] != 0x0){
+					// 	printString(pathParams1);
+						if(cekNamaFile(files, pathParams1, i) == 1) {
+							idx1 = i;
+						}
+						if (cekNamaFile(files, pathParams2, i) == 1) {
+							idx2 = i;
+						}
+					// }
+				}
+
+				//kalau pathParams1 ga ada, keluarin pesan error no such file or directory
+				//else 
+					// kalau pathParams2 ga ada, ubah nama file di indeks a dari pathParams1 jadi pathParams2
+					// kalau ada, bagi kasus:
+						// kalau pathParams1 itu folder, pathParams2 juga folder, pindahing parent a jadi b
+						// kalau pathParams1 itu folder, pathParams2 file, gabisa
+						// kalau pathParams1 itu file, pathParams2 folder, pindahin parent a jadi b
+						// kalau dua2nya file, isinya pathParams2 pindah ke pathParams1, caranya pin
+								//ubah nama file pathParams1 jadi pathParams2, hapus file pathParams2
+
+				// printNumber(idx1);
+				// printNumber(idx2);
+
+				if(idx1 == -1){
+					printString("\n\rfile/folder ");
+					printString(pathParams1);
+					printString(" tidak ditemukan\n\r");
+				} else {
+					if(idx2 == -1){
+						//ganti nama aja
+						for(j=0; j<14; j++){
+							files[idx1*16+j+2] = pathParams2[j];
+						}
 					} else {
-						*curDir = i;
+						if(files[idx1*16+1] == 0xff && files[idx2*16+1] == 0xff){
+							files[idx1*16] = idx2;
+							// printString("pemindahan berhasil\n\r");
+						} else if(files[idx1*16+1] == 0xff && files[idx2*16+1] != 0xff){
+							printString("Tidak bisa melakukan mv dari folder ke file, gomennasai\n\r");
+						} else if(files[idx1*16+1] != 0xff && files[idx2*16+1] == 0xff){
+							files[idx1*16] = idx2;
+						} else {
+							for(j=0; j<14; j++){
+								files[idx1*16+j+2] = pathParams2[j];
+							}
+							deleteFile(pathParams2, &sect, curDir);
+							// for(j=0; j<16; j++){
+							// 	files[]
+							// }
+							// deleteFile(pathParams2, sectors, curDir);
+							// printString("under construction");
+						}
 					}
 				}
 			}
 		}
 
-		else if(buff[0]=='l'&&buff[1]=='s'){
+		else if(buff[0]=='c'&&buff[1]=='p'){
 
-			readSector(map, 256);
-			readSector(files, 257);
-			readSector(files + 512, 258);
-			readSector(sectors, 259);
+			//belum support nerima path sama copy entire directory (yg butuh flag -r)
+			char pathParams1[20];
+			char pathParams2[20];
+			int idx1, idx2;
 
-			printString("\n\r");
-			showFolderContent(*curDir);
+			//for moving file or renaming file if folder doesn't exist
 
+			if(buff[2]==' '){
+				idx = 3;
+				j = 0;
+				while(buff[idx]!=' '){
+					pathParams1[j] = buff[idx];
+					j++;
+					idx++;
+				}
+				for(;j<14;j++){
+					pathParams1[j] = 0x0;
+				}
+				idx++;
+				j = 0;
+				while(buff[idx]!=0x0){
+					pathParams2[j] = buff[idx];
+					j++;
+					idx++;
+				}
+				for(;j<14;j++){
+					pathParams2[j] = 0x0;
+				}
+
+				//cari indeks dari file bernama pathParams1 di folder as a (if gaada = -1)
+				//cari indeks dari file bernama pathParams2 di folder as b (if gaada = -1)
+
+				idx1 = -1;
+				idx2 = -1;
+
+				for(i=0; i<64; i++){
+					// if(files[i*16] == curDir && files[i*16+2] != 0x0){
+					// 	printString(pathParams1);
+						if(cekNamaFile(files, pathParams1, i) == 1) {
+							idx1 = i;
+						}
+						if (cekNamaFile(files, pathParams2, i) == 1) {
+							idx2 = i;
+						}
+					// }
+				}
+
+				if(idx1 == -1){
+					printString("\n\rfile/folder ");
+					printString(pathParams1);
+					printString(" tidak ditemukan\n\r");
+				} else {
+					if(idx2 == -1){
+						if(files[idx1*16+1]==0xff){ //kalau dia merupakan folder
+							printString("maaf, belum support copy folder\r\n");
+						} else if(files[idx2*16+1]!=0xff){
+							
+						}
+					} else {
+						if(files[idx1*16+1] == 0xff && files[idx2*16+1] == 0xff){
+							files[idx1*16] = idx2;
+							// printString("pemindahan berhasil\n\r");
+						} else if(files[idx1*16+1] == 0xff && files[idx2*16+1] != 0xff){
+							printString("Tidak bisa melakukan mv dari folder ke file, gomennasai\n\r");
+						} else if(files[idx1*16+1] != 0xff && files[idx2*16+1] == 0xff){
+							files[idx1*16] = idx2;
+						} else {
+							for(j=0; j<14; j++){
+								files[idx1*16+j+2] = pathParams2[j];
+							}
+							// for(j=0; j<16; j++){
+							// files[]
+							// }
+							// deleteFile(pathParams2, sectors, curDir);
+							// printString("under construction");
+						}
+					}
+				}
+			}
+		}
+
+		else if(buff[0]=='c'&&buff[1]=='a'&&buff[2]=='t'){
+
+			int dir[512];
+			int i;
+			char filename[50];
+			char bufferfile[16 * 512];
+			int posSector;
+
+			// printString("debug\n\r");
+
+			if(buff[3]==' '){
+				idx = 4;
+				j = 0;
+				while(buff[idx]!=0x0){
+					filename[j] = buff[idx];
+					j++;
+					idx++;
+				}
+				for(;j<50;j++){
+					filename[j] = 0x0;
+				}
+
+				idx = -1;
+
+				for(i=0; i<64; i++){
+					if(cekNamaFile(files, filename, i) == 1) {
+						idx = i;
+					}
+				}
+
+				if(idx == -1){
+					printString("\n\rfile tidak ditemukan\n\r");
+				} else if(files[idx*16+1] == 0xff){
+					printString("tidak bisa melihat isi folder dengan command cat\n\r");
+				} else {
+					posSector = files[idx*16+1];
+					j = 0;
+					i = 0;
+					while(sectors[posSector * 16 + j] != 0x0){
+						readSector(bufferfile + 512 * i, sectors[posSector * 16 + j]);
+						j++;
+						i++;
+					}
+					printString("\n\r");
+					printString(bufferfile);
+				}
+				//cari file di current directory yg namanya sesuai sama filename
+				//readsector isi filenya ke array buff
+				//printString buff
+			}
+		}
+
+		else if(buff[0]=='r'&&buff[1]=='m'){
+			//to be continued...
 		}
 
 		else{
@@ -297,7 +346,6 @@ void bacaInput(char* buff, char* curDir){
 					executeProgram(option, 0x4000, &success);
 				}
 			}
-
 			printString("\n\rCommand '");
 			printString(buff);
 			printString("' tidak ditemukan!!!\n\r");
@@ -323,122 +371,163 @@ void bacaInput(char* buff, char* curDir){
 
 }
 
-
-
-int strcmp(char* s1, char* s2){
-	for(; *s1 == *s2; ++s1, ++s2){
-		if(*s1 == 0x0 || *s2 == 0x0){
-			break;
-		}
-	}
-	if(*s1 != *s2) return 0;
-	else return 1;
+void echoText(char *buff, char *option){
+    int idx, j;
+    if(buff[4]==0x0){
+        printString("\r\n");
+    } else if(buff[4]==' '){
+        idx = 5;
+        j = 0;
+        while(buff[idx]!=0x0){
+            option[j] = buff[idx];
+            j++;
+            idx++;
+        }
+        option[j] = 0x0;
+        printString("\n\r");
+        printString(option);
+        printString("\r");
+    } else {
+        printString("Command '");
+        printString(buff);
+        printString("' tidak ditemukan!!!\n\r");
+    }	
 }
 
-void charRemnant(char *str, char *target, int i){
-	int j;
-	for(j=0; str[i]!='\0'; j++){
-		target[j] = str[i];
-		i++; 
-	}
-	target[j] = '\0';
+void makeDir(char *buff, char *option, char *files, int curDir){
+    int idx, i, j, entryIdx;
+    if(buff[5]==0x0){
+        printString("\r\n");
+    } else if(buff[5]==' '){
+        idx = 6;
+        j = 0;
+        while(buff[idx]!=0x0){
+            option[j] = buff[idx];
+            j++;
+            idx++;
+        }
+        option[j] = 0x0;
+        for(;j<14;j++){
+            option[j] = 0x0;
+        }
+
+        for(i = 0; i < 512 * 2; i = i + 16){
+            if(files[i]==0x0 && files[i+1]==0x0 && files[i+2]==0x0){
+                entryIdx = i;
+                break;
+            }
+        }
+
+        if(i == 512 * 2){
+            printString("Full memory:(\n\r");
+            return;
+        }
+
+        files[entryIdx] = curDir;
+        files[entryIdx+1] = 0xff;
+        for(i=0; i<14; i++){
+            files[entryIdx + i + 2] = option[i];
+        }
+    } 
+    else {
+        printString("\n\rCommand '");
+        printString(buff);
+        printString("' tidak ditemukan!!!\n\r");
+    }	
 }
 
-void showFolderContent(int curDir){
-	char files[512 * 2];
-	char filename[20];
-	int i;
-	int j;
+void executeFile(char *buff, char *option, char *files, char *curDir, int *success){
+    int i, j=0, idx = 2;
+    while(buff[idx]!=0x0){
+        option[j] = buff[idx];
+        j++;
+        idx++;
+    }
+    for(;j<14;j++){
+        option[j] = 0x0;
+    }
 
-	readSector(files, 257);
-	readSector(files + 512, 258);
-
-	for(i=0; i<1024; i = i+16){
-		if(files[i] == curDir && files[i+2] != 0x0){
-			int k = 0;
-			for(j=i+2; j<i+16; j++){
-				filename[k++] = files[j];
-			}
-			printString(filename);
-			printString("\n\r");
-		}
-	}
+    i = 0;
+    while(i<64 && (files[i*16] != *curDir || cekNamaFile(files, option, i) == 0 || files[i*16+1] == 0xff)){
+        i++;
+    }
+    if(i == 64) {
+        printString("\r\n");
+        printString("program tidak valid");
+        return;
+    } else {
+        executeProgram(option, 0x4000, &success);
+    }
 }
 
-int cekNamaFile(char* files, char* buff, int i){
+void changeDir(char *buff, char *files, char *curDir){
+    int dir[512];
+    int i,j, idx;
+    char filename[20];
+    char pathParams[50];
 
-	int j;
-	char filename[20];
-	int k = 0;
+    //for changing directories
 
-	for(j=2; j<16; j++){
-		filename[k++] = files[i*16+j];
-	}
-
-	filename[k] = 0x0;
-
-	if(strcmp(filename, buff)){
-		return 1;
-	} else {
-		return 0;
-	}
+    if(buff[2]==0x0){
+        *curDir = 0xff;
+    } else if(buff[2]==' '){
+        idx = 3;
+        j = 0;
+        while(buff[idx]!=0x0){
+            if(buff[idx]!='/'){
+                pathParams[j] = buff[idx];
+                j++;
+            } else {
+                pathParams[j] = 0x0;
+                if(strcmp(pathParams,"..")){
+                    if(*curDir != 0xff){
+                        *curDir = files[(*curDir) * 16];
+                    }
+                } else {
+                    i = 0;
+                    while(i<64 && (files[i*16] != *curDir || files[i*16+1] != 0xff || cekNamaFile(files, pathParams, i) == 0)){
+                        i++;
+                    }
+                    if(i == 64) {
+                        printString("\r\n");
+                        printString("path tidak valid");
+                        break;
+                    } else {
+                        *curDir = i;
+                    }
+                }
+                clear(pathParams);
+                j = 0;
+            }
+            idx++;
+        }
+        pathParams[j] = 0x0;
+        if(strcmp(pathParams,"..")){
+            if(*curDir != 0xff){
+                *curDir = files[(*curDir) * 16];
+            }
+        } 
+        else {
+            i = 0;
+            while(i<64 && (files[i*16] != *curDir || files[i*16+1] != 0xff || cekNamaFile(files, pathParams, i) == 0)){
+                i++;
+            }
+            if(i == 64) {
+                printString("\r\n");
+                printString("path tidak valid");
+            } else {
+                *curDir = i;
+            }
+        }
+    }
 }
 
-void printNumber(int a){
+void traverseDir(int curDir){
+    readSector(map, 256);
+    readSector(files, 257);
+    readSector(files + 512, 258);
+    readSector(sectors, 259);
 
-	char pad = 0xe;
-	int digit[10];
-
-	int satuan = mod(a, 10);
-	int temp = div(a, 10);
-	int puluhan = mod(temp, 10);
-	int ratusan = div(temp, 10);
-
-	digit[0] = pad * 0x100 + '0';
-	digit[1] = pad * 0x100 + '1';
-	digit[2] = pad * 0x100 + '2';
-	digit[3] = pad * 0x100 + '3';
-	digit[4] = pad * 0x100 + '4';
-	digit[5] = pad * 0x100 + '5';
-	digit[6] = pad * 0x100 + '6';
-	digit[7] = pad * 0x100 + '7';
-	digit[8] = pad * 0x100 + '8';
-	digit[9] = pad * 0x100 + '9';
-
-	interrupt(0x10, digit[ratusan], 0x0, 0x0, 0x0); // interrupt digit puluhan
-	interrupt(0x10, digit[puluhan], 0x0, 0x0, 0x0); // interrupt digit satuan
-	interrupt(0x10, digit[satuan], 0x0, 0x0, 0x0); // interrupt digit satuan
- 	printString("\r\n");
-  
-}
-
-void generatePath(char curDir){
-	char listedPath[1000];
-	char files[512 * 2];
-	char path[100];
-	int i,j,k;
-	i = 0;
-
-	readSector(files, 257);
-	readSector(files + 512, 258);
-
-	while(curDir != 0xFF){
-		path[i++] = curDir;
-		curDir = files[curDir * 16];
-	}
-
-	j = 0;
-	while(i > 0){
-		listedPath[j++] = '/';
-		for(k = 0; k < 14 && files[path[i-1]*16 + 2 + k] != 0x0;k++){
-			listedPath[j++] = files[path[i-1] * 16 + 2 + k];
-		}
-		i--;
-	}
-
-	if(j>0){
-		printString(listedPath);
-	}else{
-		printString("/");
-	}
+    printString("\n\r");
+    showFolderContent(curDir);
 }
