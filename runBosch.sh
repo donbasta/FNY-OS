@@ -1,3 +1,3 @@
-#1/bin/bash
+#!/bin/bash
 
 bochs -f if2230.config
