@@ -11,9 +11,7 @@ char buff[100];
 char absPath[100];
 char history[100][100];
 char buff[100];
-int cnt=-999, head = -1, tail=-1;
-char tes[2];
-
+int tail, cnt=-999, head = 0, used=0;
 char stat;
 // Kalo dah ada include apus aja
 //char buf[10] = {'a', 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -42,9 +40,6 @@ int main(){
 		}
 		readString(buff);
 		bacaInput(buff, &curDir);
-		
-		//printString(buf);
-		// printNumber(curDir);
 	}
 }
 
@@ -68,55 +63,42 @@ void bacaInput(char* buff, char* curDir){
 
 	if(stat!='\0'){
 		if(stat == 'U'){
-			//int i;
-			//printString(test);
-			if(cnt ==-999){
-				cnt = tail;
-			}
-			else{
-				cnt--;
-				if(cnt<0)
-					cnt +=100;
-			}
-			last = -1;
-			for(i = 0;i<50;i++){
-				if(buff[i]!='\0'){
-					last = i;
+			if(used != 0){
+				if(cnt ==-999){
+					cnt = used;
 				}
-			}
-			if(last!=-1){
-				while(last>=0){
-					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
-					interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
-					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
-					last--;
+				else{
+					cnt--;
 				}
+				last = -1;
+				for(i = 0;i<50;i++){
+					if(buff[i]!='\0'){
+						last = i;
+					}
+				}
+				if(last!=-1){
+					while(last>=0){
+						interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+						interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
+						interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+						last--;
+					}
+				}
+				tail = mod(head+cnt-1, 100);
+				for(i =0;history[tail][i]!='\0';i++){
+					buff[i] = history[tail][i];
+				}
+				buff[i] = '\0';
 			}
-			for(i =0;history[cnt][i]!='\0';i++){
-				buff[i] = history[cnt][i];
-			}
-			buff[i] = '\0';
 		}
 		else if(stat == 'D'){
-			//int i; 
-			if(cnt !=-999){
-				cnt = mod(cnt+1, 100);
-			}
-			if(cnt == tail)
-				cnt = -999;
+			
 		}
 		else if(stat == 'T'){
 
 		}
 
 		if(cnt!=-999){
-			
-			
-			for(i=0;buff[i]!='\0';i++){
-				buff[i] = history[tail][i];
-			}
-			buff[i] = '\0';
-			
 			for(i=0;buff[i]!='\0';i++){
 				interrupt(0x10, 0xe * 0x100 + buff[i], 0x0, 0x0, 0x0);
 			}
@@ -332,26 +314,20 @@ void bacaInput(char* buff, char* curDir){
 		writeSector(files + 512, 258);
 		writeSector(sectors, 259);
 
-		//int i;
-		if(head==-1){
-			head = 0;
-		}
-		tail = mod((tail+1),100);
-		if(tail==head){
+		if(used==100){
 			head = mod((head+1),100);
 		}
+		tail = mod(head+used, 100);
 		for(i=0;buff[i]!='\0';i++){
 			history[tail][i] = buff[i];
 		}
 		history[tail][i] = '\0';
 		cnt = -999;
 		stat = '\0';
+		used++;
 	}
 	return;
-
 }
-
-
 
 int strcmp(char* s1, char* s2){
 	for(; *s1 == *s2; ++s1, ++s2){
