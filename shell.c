@@ -16,7 +16,7 @@ char tes[2];
 
 char stat;
 // Kalo dah ada include apus aja
-char buf[10] = {'a', 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//char buf[10] = {'a', 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int main(){
 
@@ -36,7 +36,7 @@ int main(){
 				buff[i] = 0x0;
 			}
 			printString("\n\r");
-			printString("fny_os@bapak_imba:");
+			printString("farras-kun@fny_os:");
 			generatePath(curDir);
 			printString("$ ");
 		}
