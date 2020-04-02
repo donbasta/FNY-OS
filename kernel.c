@@ -14,6 +14,8 @@ char files[512 * 2];
 char sectors[512];
 char freeSector[512];
 
+extern char stat = '\0';
+
 void main()
 {
   int *success;

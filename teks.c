@@ -1,8 +1,7 @@
-char STATUS;
+char stat;
 
 void printString(char *string)
 {
-
   char ah = 0xe;
   int al;
   int ax;
@@ -28,6 +27,7 @@ void readString(char *string)
   {
     ch = interrupt(0x16, 0x0, 0x0, 0x0, 0x0);
     if (ch == 0xd)
+      stat = '\0';
       break; //jika user menekan tombol enter
     if (ch == 0x8)
     {
@@ -42,27 +42,28 @@ void readString(char *string)
         continue;
     }
     else if(ch == 0x0){ // kalau neken tombol up
-        STATUS = 'U';
+        stat = 'U';
         break;
     }
-    else if(ch == 0x8){ // kalau neken tombol down
-        STATUS = 'D';
-        break;
-    }
-    else if(ch == 0x8){ // kalau neken tombol tab
-        STATUS = 'T';
-        break;
-    }
-    else if(ch == 0x8){ // kalau neken tombol <-
+    // else if(ch == 0x8){ // kalau neken tombol down
+    //     stat = 'D';
+    //     break;
+    // }
+    // else if(ch == 0x8){ // kalau neken tombol tab
+    //     stat = 'T';
+    //     break;
+    // }
+    // else if(ch == 0x8){ // kalau neken tombol <-
         
-    }
-    else if(ch == 0x8){ // kalau neken tombol ->
+    // }
+    // else if(ch == 0x8){ // kalau neken tombol ->
         
-    }
+    // }
     else
     {
       string[ptr++] = ch;
       interrupt(0x10, 0xe * 0x100 + ch, 0x0, 0x0, 0x0);
     }
+
   }
 }

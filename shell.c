@@ -10,11 +10,13 @@ void generatePath(char curDir);
 char buff[100];
 char absPath[100];
 char history[100][100];
-char cmd[100];
-int cnt=-999, head = 0, tail=0;
+char buff[100];
+int cnt=-999, head = -1, tail=-1;
+char tes[2];
 
+char stat;
 // Kalo dah ada include apus aja
-extern char STATUS;
+char buf[10] = {'a', 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int main(){
 
@@ -22,30 +24,28 @@ int main(){
 	int i;
 	makeInterrupt21();
 	printString("\n\n\r");
-	printString("Selamat datang di shell v.0.1\n\r");
-	printString("fny_os@bapak_imba:");
-	// printString("/");
-	printString("/");
-	printString("$ ");
+	printString("Selamat datang di shell v.0.1");
+	//printString(buf);
 
 	curDir = 0xff;
 
 	while(1){
-
 		// interrupt(0x21,1,buff,0,0);
-		for(i = 0; i<100; i++){
-			buff[i] = 0x0;
+		if(stat == '\0'){
+			for(i = 0; i<100; i++){
+				buff[i] = 0x0;
+			}
+			printString("\n\r");
+			printString("fny_os@bapak_imba:");
+			generatePath(curDir);
+			printString("$ ");
 		}
 		readString(buff);
 		bacaInput(buff, &curDir);
-		printString("\n\r");
-		printString("fny_os@bapak_imba:");
-		generatePath(curDir);
-		printString("$ ");
+		
+		//printString(buf);
 		// printNumber(curDir);
-
 	}
-
 }
 
 void bacaInput(char* buff, char* curDir){
@@ -60,26 +60,30 @@ void bacaInput(char* buff, char* curDir){
 	int i, j, k, success;
 
 	clear(option, 20);
-
 	readSector(map, 256);
 	readSector(files, 257);
 	readSector(files + 512, 258);
 	readSector(sectors, 259);
 
-	if(STATUS!='\0'){
-		if(STATUS == 'U'){
+	if(stat!='\0'){
+		if(stat == 'U'){
 			//int i;
+			//printString(test);
 			if(cnt ==-999){
 				cnt = tail;
 			}
 			else{
-				tail--;
-				if(tail<0)
-					tail +=100;
+				cnt--;
+				if(cnt<0)
+					cnt +=100;
 			}
-			cnt = tail;
+			for(i =0;history[cnt][i]!='\0';i++){
+				buff[i] = history[cnt][i];
+			}
+			buff[i] = '\0';
+			printString(buff);
 		}
-		else if(STATUS == 'D'){
+		else if(stat == 'D'){
 			//int i; 
 			if(cnt !=-999){
 				cnt = mod(cnt+1, 100);
@@ -87,20 +91,21 @@ void bacaInput(char* buff, char* curDir){
 			if(cnt == tail)
 				cnt = -999;
 		}
-		else if(STATUS == 'T'){
+		else if(stat == 'T'){
 
 		}
 
 		if(cnt!=-999){
-			for(i=0;cmd[i]!='\0';i++){
-			cmd[i] = history[tail][i];
+			for(i=0;buff[i]!='\0';i++){
+				buff[i] = history[tail][i];
 			}
-			cmd[i] = '\0';
+			buff[i] = '\0';
+			printString(buff);
 		}
 		else
 		{
-			cmd[0] = '\0';
-		}
+			buff[0] = '\0';
+		}	
 	}
 	else{
 		if(strcmp(buff,"halo")){
@@ -309,15 +314,19 @@ void bacaInput(char* buff, char* curDir){
 		writeSector(sectors, 259);
 
 		//int i;
+		if(head==-1){
+			head = 0;
+		}
 		tail = mod((tail+1),100);
 		if(tail==head){
 			head = mod((head+1),100);
 		}
-		for(i=0;cmd[i]!='\0';i++){
-			history[tail][i] = cmd[i];
+		for(i=0;buff[i]!='\0';i++){
+			history[tail][i] = buff[i];
 		}
 		history[tail][i] = '\0';
 		cnt = -999;
+		stat = '\0';
 	}
 	return;
 
