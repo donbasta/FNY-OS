@@ -81,7 +81,7 @@ void bacaInput(char* buff, char* curDir){
 				buff[i] = history[cnt][i];
 			}
 			buff[i] = '\0';
-			printString(buff);
+			// printString(buff);
 		}
 		else if(stat == 'D'){
 			//int i; 
@@ -100,7 +100,15 @@ void bacaInput(char* buff, char* curDir){
 				buff[i] = history[tail][i];
 			}
 			buff[i] = '\0';
-			printString(buff);
+			while(i>0){
+				interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+				interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
+        		interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+				i--;
+			}
+			for(i=0;buff[i]!='\0';i++){
+				interrupt(0x10, 0xe * 0x100 + buff[i], 0x0, 0x0, 0x0);
+			}
 		}
 		else
 		{
