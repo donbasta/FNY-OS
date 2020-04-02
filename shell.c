@@ -58,6 +58,7 @@ void bacaInput(char* buff, char* curDir){
 	int idx = 0;
 	char option[20], pathParams[150];
 	int i, j, k, success;
+	int last;
 
 	clear(option, 20);
 	readSector(map, 256);
@@ -77,10 +78,10 @@ void bacaInput(char* buff, char* curDir){
 				if(cnt<0)
 					cnt +=100;
 			}
-			for(i =0;history[cnt][i]!='\0';i++){
-				buff[i] = history[cnt][i];
-			}
-			buff[i] = '\0';
+			// for(i =0;history[cnt][i]!='\0';i++){
+			// 	buff[i] = history[cnt][i];
+			// }
+			// buff[i] = '\0';
 			// printString(buff);
 		}
 		else if(stat == 'D'){
@@ -96,16 +97,26 @@ void bacaInput(char* buff, char* curDir){
 		}
 
 		if(cnt!=-999){
+			last = -1;
+			for(i = 0;i<50;i++){
+				if(buff[i]!='\0'){
+					last = i;
+				}
+			}
+			if(last!=-1){
+				while(last>=0){
+					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+					interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
+					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+					last--;
+				}
+			}
+			
 			for(i=0;buff[i]!='\0';i++){
 				buff[i] = history[tail][i];
 			}
 			buff[i] = '\0';
-			while(i>0){
-				interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
-				interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
-        		interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
-				i--;
-			}
+			
 			for(i=0;buff[i]!='\0';i++){
 				interrupt(0x10, 0xe * 0x100 + buff[i], 0x0, 0x0, 0x0);
 			}
