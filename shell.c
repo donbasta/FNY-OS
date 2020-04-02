@@ -2,7 +2,7 @@ void echoText(char* buff, char* option);
 void makeDir(char *buff, char *option, char *files, char *curDir);
 void executeFile(char *buff, char *option, char *files, char *curDir, int *success);
 void changeDir(char *buff, char *files, char *curDir);
-void traverseDir(int curDir);
+void traverseDir(char curDir);
 
 char stat;
 char history[100][100];
@@ -89,7 +89,7 @@ void bacaInput(char* buff, char* curDir){
 		}
 
 		else if(buff[0]=='l'&&buff[1]=='s'){
-			traverseDir(curDir);
+			traverseDir(curDir[0]);
 		}
 
 		else if(buff[0]=='m'&&buff[1]=='v'){
@@ -532,16 +532,17 @@ void changeDir(char *buff, char *files, char *curDir){
     }
 }
 
-void traverseDir(int curDir){
+void traverseDir(char curDir){
 
 	char map[512];
 	char files[512 * 2];
 	char sectors[512];
+	char filename[15];
+	int i, j, k;
     readSector(map, 256);
     readSector(files, 257);
     readSector(files + 512, 258);
     readSector(sectors, 259);
 
-    printString("\n\r");
     showFolderContent(curDir);
 }

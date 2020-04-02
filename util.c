@@ -27,16 +27,14 @@ void showFolderContent(int curDir){
 	readSector(files, 257);
 	readSector(files + 512, 258);
 
-	for(i=0; i<1024; i = i+16){
-		if(files[i] == curDir && files[i+2] != 0x0){
-			int k = 0;
-			for(j=i+2; j<i+16; j++){
-				filename[k++] = files[j];
-			}
-			printString(filename);
+	printString("\n\r");
+    for(i=0; i<1024; i = i+16){
+		if(files[i] == curDir){
+			printString(files + i + 2);
 			printString("\n\r");
 		}
 	}
+	
 }
 
 int cekNamaFile(char* files, char* buff, int i){
