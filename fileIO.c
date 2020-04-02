@@ -34,7 +34,7 @@ void deleteFile(char *path, int *sectors, char parentIndex){
       for(; j < 14; j++){
         filename[j] = 0x0;
       }
-      // j = 0;
+      j = 0;
       for(k = 0;k<14;k++){
         parent[k] = filename[k];
       }

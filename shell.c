@@ -8,6 +8,8 @@ char stat;
 char history[100][100];
 char cmd[100];
 int cnt=-999, head = 0, tail=0;
+extern int delete;
+extern char filename1[50];
 
 void bacaInput(char* buff, char* curDir){
 
@@ -324,7 +326,15 @@ void bacaInput(char* buff, char* curDir){
 		}
 
 		else if(buff[0]=='r'&&buff[1]=='m'){
-			//to be continued...
+			if(buff[2] == ' '){
+				idx = 3;
+				for(i = 0;buff[i] != 0x0;i++){
+					filename1[i] = buff[idx];
+					idx++;
+				}
+				delete = 1;
+				
+			}
 		}
 
 		else{
@@ -523,6 +533,10 @@ void changeDir(char *buff, char *files, char *curDir){
 }
 
 void traverseDir(int curDir){
+
+	char map[512];
+	char files[512 * 2];
+	char sectors[512];
     readSector(map, 256);
     readSector(files, 257);
     readSector(files + 512, 258);

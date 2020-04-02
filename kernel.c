@@ -28,6 +28,8 @@ char absPath[100];
 // int cnt=-999, head = 0, tail=0;
 
 extern char stat;
+int delete = 0;
+char filename1[50];
 
 void main()
 {
@@ -36,7 +38,9 @@ void main()
   char curDir = 0xff;
   int i;
   // char stat = 0x0;
-
+  for(i = 0;i<50;i++){
+    filename1[i] = 0x0;
+  }
   makeInterrupt21();
 
   printString("\n\n\n\n");
@@ -71,6 +75,13 @@ void main()
         }
         readString(buff);
         bacaInput(buff, &curDir);
+        if(delete){
+          deleteFile(filename1,success,curDir);
+          for(i = 0;i<50;i++){
+            filename1[i] = 0x0;
+          }
+          delete = 0;
+        }
         printString("\n\r");
         printString("bapak_imba@fny_os:");
         generatePath(curDir);
