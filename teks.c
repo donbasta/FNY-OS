@@ -26,9 +26,11 @@ void readString(char *string)
   while (1)
   {
     ch = interrupt(0x16, 0x0, 0x0, 0x0, 0x0);
-    if (ch == 0xd)
+    if (ch == 0xd){
       stat = '\0';
-      break; //jika user menekan tombol enter
+      break;
+    }
+       //jika user menekan tombol enter
     if (ch == 0x8)
     {
       if (ptr > 0)
@@ -64,6 +66,5 @@ void readString(char *string)
       string[ptr++] = ch;
       interrupt(0x10, 0xe * 0x100 + ch, 0x0, 0x0, 0x0);
     }
-
   }
 }
