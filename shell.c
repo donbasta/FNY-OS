@@ -5,6 +5,7 @@ void charRemnant(char *str, char *target, int i);
 void showFolderContent(char* str);
 int cekNamaFile(char* files, char* buff, int i);
 void printNumber(int a);
+void copyStr(char *src, char *trg);
 void generatePath(char curDir);
 
 char buff[100];
@@ -111,8 +112,24 @@ void bacaInput(char* buff, char* curDir){
 			int i,j,count = 0;
 			char candidates[16][14];
 			char same, comp;
-			for(;;){ // Traverse di sini
+			char files[512 * 2];
+			int last;
+
+			readSector(files, 257);
+			readSector(files + 512,258);
+
+			last = -1;
+			for(i = 0;buff[i]!= 0x0;i++){
+				last = i;
+			}
+
+			for(i = 0;i<64;i++){ // Traverse di sini
 				char nama[14];
+				if(files[i*16 + 2] != 0x0){
+					for(j = 0;j<14 && files[i*16 + 2 + j] != 0x0;j++){
+						nama[j] = files[i*16 + 2 + j];
+					}
+				}
 				if(samePrefix(buff, nama)==1){
 					copyStr(nama, candidates[count]);
 					count++;
@@ -123,6 +140,14 @@ void bacaInput(char* buff, char* curDir){
 				for(j=1;j<count;j++){
 					if(comp!=candidates[j][i])
 						break;
+				}
+			}
+			if(last != -1){
+				while(last >= 0){
+					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+					interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
+					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+					last--;
 				}
 			}
 			// Ubah buff nya
