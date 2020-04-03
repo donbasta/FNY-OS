@@ -51,10 +51,11 @@ void readString(char *string)
     //     stat = 'D';
     //     break;
     // }
-    // else if(ch == 0x8){ // kalau neken tombol tab
-    //     stat = 'T';
-    //     break;
-    // }
+    else if(ch == 0x9){ // kalau neken tombol tab
+        stat = 'T';
+        string[ptr] = '\0';
+        break;
+    }
     // else if(ch == 0x8){ // kalau neken tombol <-
         
     // }

@@ -62,51 +62,77 @@ void bacaInput(char* buff, char* curDir){
 	readSector(sectors, 259);
 
 	if(stat!='\0'){
-		if(stat == 'U'){
-			if(used != 0){
-				if(cnt ==-999){
-					cnt = used;
-				}
-				else{
-					cnt--;
-				}
-				last = -1;
-				for(i = 0;i<50;i++){
-					if(buff[i]!='\0'){
-						last = i;
+		if(stat == 'U' || stat == 'D'){
+			if(stat == 'U'){
+				if(used != 0){
+					if(cnt ==-999){
+						cnt = used;
 					}
-				}
-				if(last!=-1){
-					while(last>=0){
-						interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
-						interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
-						interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
-						last--;
+					else{
+						cnt--;
 					}
+					last = -1;
+					for(i = 0;i<50;i++){
+						if(buff[i]!='\0'){
+							last = i;
+						}
+					}
+					if(last!=-1){
+						while(last>=0){
+							interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+							interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
+							interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
+							last--;
+						}
+					}
+					tail = mod(head+cnt-1, 100);
+					for(i =0;history[tail][i]!='\0';i++){
+						buff[i] = history[tail][i];
+					}
+					buff[i] = '\0';
 				}
-				tail = mod(head+cnt-1, 100);
-				for(i =0;history[tail][i]!='\0';i++){
-					buff[i] = history[tail][i];
-				}
-				buff[i] = '\0';
 			}
-		}
-		else if(stat == 'D'){
-			
+			else{ //stat == 'D'
+
+			}
+
+			if(cnt!=-999){
+				for(i=0;buff[i]!='\0';i++){
+					interrupt(0x10, 0xe * 0x100 + buff[i], 0x0, 0x0, 0x0);
+				}
+			}
+			else
+			{
+				buff[0] = '\0';
+			}
+				
 		}
 		else if(stat == 'T'){
-
-		}
-
-		if(cnt!=-999){
-			for(i=0;buff[i]!='\0';i++){
-				interrupt(0x10, 0xe * 0x100 + buff[i], 0x0, 0x0, 0x0);
+			int i,j,count = 0;
+			char candidates[16][14];
+			char same, comp;
+			for(;;){ // Traverse di sini
+				char nama[14];
+				if(samePrefix(buff, nama)==1){
+					copyStr(nama, candidates[count]);
+					count++;
+				}
 			}
+			for(i=0;i<14;i++){
+				comp=candidates[0][i];
+				for(j=1;j<count;j++){
+					if(comp!=candidates[j][i])
+						break;
+				}
+			}
+			// Ubah buff nya
+			for(j=0;j<i;j++){
+				buff[j] = candidates[0][j];
+			}
+			buff[j] = '\0';
+			//nge print
+			printString(buff);
 		}
-		else
-		{
-			buff[0] = '\0';
-		}	
 	}
 	else{
 		if(strcmp(buff,"halo")){
@@ -414,6 +440,26 @@ void printNumber(int a){
 	interrupt(0x10, digit[satuan], 0x0, 0x0, 0x0); // interrupt digit satuan
  	printString("\r\n");
   
+}
+
+void copyStr(char *src, char *trg){
+	int i=0;
+	while(src[i]!='\0'){
+		trg[i] = src[i];
+		i++;
+	}
+	trg[i]='\0';
+}
+
+int samePrefix(char *a, char *b){
+	int i=0;
+	while(a[i]!='\0'){
+		if(a[i]!=b[i]){
+			return 0;
+		}
+		i++;
+	}
+	return 1;
 }
 
 void generatePath(char curDir){
