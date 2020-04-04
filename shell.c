@@ -11,7 +11,11 @@ char history[100][100];
 char cmd[100];
 int cnt=-999, head = 0, tail=0;
 extern int delete;
+extern int copy;
+extern char pathParams1[14];
+extern char pathParams2[14];
 extern char filename1[50];
+extern int move;
 
 void bacaInput(char* buff, char* curDir){
 
@@ -82,19 +86,16 @@ void bacaInput(char* buff, char* curDir){
 			int i,j,count = 0;
 			char candidates[16][14];
 			char same, comp;
-			char files[512 * 2];
 			int last;
-
-			readSector(files, 257);
-			readSector(files + 512,258);
-
+			char nama[14];
+			
 			last = -1;
 			for(i = 0;buff[i]!= 0x0;i++){
 				last = i;
 			}
 
 			for(i = 0;i<64;i++){ // Traverse di sini
-				char nama[14];
+				
 				if(files[i*16 + 2] != 0x0){
 					for(j = 0;j<14 && files[i*16 + 2 + j] != 0x0;j++){
 						nama[j] = files[i*16 + 2 + j];
@@ -158,8 +159,6 @@ void bacaInput(char* buff, char* curDir){
 
 		else if(buff[0]=='m'&&buff[1]=='v'){
 
-			char pathParams1[20];
-			char pathParams2[20];
 			int idx1, idx2;
 			int sect;
 
@@ -242,7 +241,8 @@ void bacaInput(char* buff, char* curDir){
 							for(j=0; j<14; j++){
 								files[idx1*16+j+2] = pathParams2[j];
 							}
-							deleteFile(pathParams2, &sect, curDir);
+							delete = 1;
+							move = 1;
 							// for(j=0; j<16; j++){
 							// 	files[]
 							// }
@@ -257,9 +257,8 @@ void bacaInput(char* buff, char* curDir){
 		else if(buff[0]=='c'&&buff[1]=='p'){
 
 			//belum support nerima path sama copy entire directory (yg butuh flag -r)
-			char pathParams1[20];
-			char pathParams2[20];
 			int idx1, idx2;
+			char bufferCopy[512 * 16];
 
 			//for moving file or renaming file if folder doesn't exist
 
@@ -284,9 +283,11 @@ void bacaInput(char* buff, char* curDir){
 				for(;j<14;j++){
 					pathParams2[j] = 0x0;
 				}
+				
+				
 
-				//cari indeks dari file bernama pathParams1 di folder as a (if gaada = -1)
-				//cari indeks dari file bernama pathParams2 di folder as b (if gaada = -1)
+				// cari indeks dari file bernama pathParams1 di folder as a (if gaada = -1)
+				// cari indeks dari file bernama pathParams2 di folder as b (if gaada = -1)
 
 				idx1 = -1;
 				idx2 = -1;
@@ -312,7 +313,7 @@ void bacaInput(char* buff, char* curDir){
 						if(files[idx1*16+1]==0xff){ //kalau dia merupakan folder
 							printString("maaf, belum support copy folder\r\n");
 						} else if(files[idx2*16+1]!=0xff){
-							
+							copy = 1;
 						}
 					} else {
 						if(files[idx1*16+1] == 0xff && files[idx2*16+1] == 0xff){
@@ -323,17 +324,13 @@ void bacaInput(char* buff, char* curDir){
 						} else if(files[idx1*16+1] != 0xff && files[idx2*16+1] == 0xff){
 							files[idx1*16] = idx2;
 						} else {
-							for(j=0; j<14; j++){
-								files[idx1*16+j+2] = pathParams2[j];
-							}
-							// for(j=0; j<16; j++){
-							// files[]
-							// }
-							// deleteFile(pathParams2, sectors, curDir);
-							// printString("under construction");
+							delete=1;
+							
+							copy = 1;
 						}
 					}
 				}
+				
 			}
 		}
 

@@ -29,12 +29,17 @@ char absPath[100];
 
 extern char stat;
 int delete = 0;
+int copy = 0;
+int move = 0;
 char filename1[50];
+char pathParams1[14];
+char pathParams2[14];
 
 void main()
 {
   int *success;
   char com[20];
+  char bufferCopy[512*16];
   char curDir = 0xff;
   int i;
   // char stat = 0x0;
@@ -62,30 +67,42 @@ void main()
 
       printString("\n\n\r");
       printString("Selamat datang di shell v.0.1\n\r");
-      printString("fny_os@bapak_imba:");
-      printString("/");
-      printString("$ ");
 
       curDir = 0xff;
 
       while(1){
         // interrupt(0x21,1,buff,0,0);
-        for(i = 0; i<100; i++){
-          buff[i] = 0x0;
+        if(stat == '\0'){
+          for(i = 0; i<100; i++){
+            buff[i] = 0x0;
+          }
+          printString("\n\r");
+          printString("bapak_imba@fny_os:");
+          generatePath(curDir);
+          printString("$ ");
         }
         readString(buff);
         bacaInput(buff, &curDir);
         if(delete){
-          deleteFile(filename1,success,curDir);
-          for(i = 0;i<50;i++){
-            filename1[i] = 0x0;
+          if(copy || move){
+            deleteFile(pathParams2, success, curDir);
+            move = 0;
+          }
+          else{
+            deleteFile(filename1,success,curDir);
+            for(i = 0;i<50;i++){
+              filename1[i] = 0x0;
+            }
+            
           }
           delete = 0;
         }
-        printString("\n\r");
-        printString("bapak_imba@fny_os:");
-        generatePath(curDir);
-        printString("$ ");
+        if(copy){
+          readFile(bufferCopy, pathParams1, success, curDir);
+          writeFile(bufferCopy, pathParams2, success, curDir);
+          copy = 0;
+        }
+
         // printNumber(curDir);
       }
   }
