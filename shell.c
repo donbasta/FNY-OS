@@ -88,6 +88,19 @@ void bacaInput(char* buff, char* curDir){
 			char same, comp;
 			int last;
 			char nama[14];
+			char pred[14];
+
+			j=0;
+			for(i=0; buff[i]!='\0';i++){
+				if(buff[i]!=' '){
+					pred[j] = buff[i];
+					j++;
+				}
+				else{
+					pred[0] = '\0';
+					j=0;
+				}
+			}
 			
 			last = -1;
 			for(i = 0;buff[i]!= 0x0;i++){
@@ -101,17 +114,24 @@ void bacaInput(char* buff, char* curDir){
 						nama[j] = files[i*16 + 2 + j];
 					}
 				}
-				if(samePrefix(buff, nama)==1){
+				if(samePrefix(pred, nama)==1){
 					copyStr(nama, candidates[count]);
 					count++;
 				}
 			}
 			for(i=0;i<14;i++){
+				int flg = 0;
 				comp=candidates[0][i];
-				for(j=1;j<count;j++){
+				for(j=0;j<count;j++){
+					if(candidates[j][i]=='\0'){
+						flg = 1;
+						break;
+					}
 					if(comp!=candidates[j][i])
 						break;
 				}
+				if(flg==1)
+					break;
 			}
 			if(last != -1){
 				while(last >= 0){
