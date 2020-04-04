@@ -29,6 +29,7 @@ void readString(char *string)
     ch = interrupt(0x16, 0x0, 0x0, 0x0, 0x0);
     if (ch == 0xd){
       stat = '\0';
+      string[ptr] = '\0';
       break;
     }
        //jika user menekan tombol enter
