@@ -3,6 +3,8 @@ void makeDir(char *buff, char *option, char *files, char *curDir);
 void executeFile(char *buff, char *option, char *files, char *curDir, int *success);
 void changeDir(char *buff, char *files, char *curDir);
 void traverseDir(char curDir);
+void copyStr(char *src, char *trg);
+int samePrefix(char *a, char *b);
 
 char stat;
 char history[100][100];
@@ -22,6 +24,7 @@ void bacaInput(char* buff, char* curDir){
 	char option[20], pathParams[150];
 	int i, j, k, success;
 	int last;
+	int used;
 
 	clear(option, 20);
 	readSector(map, 256);
@@ -592,9 +595,20 @@ void changeDir(char *buff, char *files, char *curDir){
         }
     }
 }
-
 void traverseDir(char curDir){
 
+	char map[512];
+	char files[512 * 2];
+	char sectors[512];
+	char filename[15];
+	int i, j, k;
+    readSector(map, 256);
+    readSector(files, 257);
+    readSector(files + 512, 258);
+    readSector(sectors, 259);
+
+    showFolderContent(curDir);
+}
 void copyStr(char *src, char *trg){
 	int i=0;
 	while(src[i]!='\0'){
@@ -615,16 +629,3 @@ int samePrefix(char *a, char *b){
 	return 1;
 }
 
-void generatePath(char curDir){
-	char listedPath[1000];
-	char files[512 * 2];
-	char sectors[512];
-	char filename[15];
-	int i, j, k;
-    readSector(map, 256);
-    readSector(files, 257);
-    readSector(files + 512, 258);
-    readSector(sectors, 259);
-
-    showFolderContent(curDir);
-}
