@@ -27,7 +27,7 @@ char absPath[100];
 
 // int cnt=-999, head = 0, tail=0;
 
-extern char stat;
+extern char stat = '\0';
 int delete = 0;
 int copy = 0;
 int move = 0;

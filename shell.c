@@ -9,7 +9,7 @@ int samePrefix(char *a, char *b);
 char stat;
 char history[100][100];
 char cmd[100];
-int cnt=-999, head = 0, tail=0;
+int tail,cnt=-999, head = 0, used =0;
 extern int delete;
 extern int copy;
 extern char pathParams1[14];
@@ -28,8 +28,6 @@ void bacaInput(char* buff, char* curDir){
 	char option[20], pathParams[150];
 	int i, j, k, success;
 	int last;
-	int used;
-
 	clear(option, 20);
 	readSector(map, 256);
 	readSector(files, 257);
@@ -61,10 +59,12 @@ void bacaInput(char* buff, char* curDir){
 						}
 					}
 					tail = mod(head+cnt-1, 100);
-					for(i =0;history[tail][i]!='\0';i++){
-						buff[i] = history[tail][i];
+					if(cnt !=0){
+						for(i =0;history[tail][i]!='\0';i++){
+							buff[i] = history[tail][i];
+						}
+						buff[i] = '\0';
 					}
-					buff[i] = '\0';
 				}
 			}
 			else{ //stat == 'D'
