@@ -34,6 +34,8 @@ int move = 0;
 char filename1[50];
 char pathParams1[14];
 char pathParams2[14];
+int pindahFolder = 0;
+int parentCopy = 0xFF;
 
 void main()
 {
@@ -99,7 +101,12 @@ void main()
         }
         if(copy){
           readFile(bufferCopy, pathParams1, success, curDir);
-          writeFile(bufferCopy, pathParams2, success, curDir);
+          if(pindahFolder){
+            writeFile(bufferCopy, pathParams1, success, parentCopy);
+            pindahFolder = 0;
+          }else{
+            writeFile(bufferCopy, pathParams2, success, curDir);
+          }
           copy = 0;
         }
 

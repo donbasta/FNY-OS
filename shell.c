@@ -16,6 +16,8 @@ extern char pathParams1[14];
 extern char pathParams2[14];
 extern char filename1[50];
 extern int move;
+extern int parentCopy;
+extern int pindahFolder;
 
 void bacaInput(char* buff, char* curDir){
 
@@ -103,15 +105,14 @@ void bacaInput(char* buff, char* curDir){
 			}
 
 			for(i = 0;i<64;i++){ // Traverse di sini
-				
-				if(files[i*16 + 2] != 0x0){
+				if(files[i*16 + 2] != 0x0 && files[i*16]==curDir[0]){
 					for(j = 0;j<14 && files[i*16 + 2 + j] != 0x0;j++){
 						nama[j] = files[i*16 + 2 + j];
 					}
-				}
-				if(samePrefix(pred, nama)==1){
-					copyStr(nama, candidates[count]);
-					count++;
+					if(samePrefix(pred, nama)==1){
+						copyStr(nama, candidates[count]);
+						count++;
+					}
 				}
 			}
 			flg =0;
@@ -342,7 +343,9 @@ void bacaInput(char* buff, char* curDir){
 						} else if(files[idx1*16+1] == 0xff && files[idx2*16+1] != 0xff){
 							printString("Tidak bisa melakukan mv dari folder ke file, gomennasai\n\r");
 						} else if(files[idx1*16+1] != 0xff && files[idx2*16+1] == 0xff){
-							files[idx1*16] = idx2;
+							parentCopy = idx2;
+							pindahFolder = 1;
+							copy = 1;
 						} else {
 							delete=1;
 							
