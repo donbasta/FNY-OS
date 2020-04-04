@@ -22,6 +22,7 @@ void readString(char *string)
 {
   int ptr = 0;
   char ch = 0x0;
+  stat = '\0';
 
   while (1)
   {

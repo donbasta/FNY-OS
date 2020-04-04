@@ -8,6 +8,7 @@ void readFile(char *buffer, char *path, int *result, char parentIndex);
 void clear(char *buffer, int length);
 void writeFile(char *buffer, char *path, int *sectors, char parentIndex);
 void executeProgram(char *filename, int segment, int *success);
+void deleteFile(char *path, int *sectors, char parentIndex);
 
 char map[512];
 char files[512 * 2];
@@ -46,6 +47,60 @@ void handleInterrupt21 (int AX, int BX, int CX, int DX) {
     }
 }
 
+void printString(char *string)
+{
+
+  char ah = 0xe;
+  int al;
+  int ax;
+
+  while (*string != '\0')
+  {
+    al = *string;
+    ax = ah * 256 + al;
+    interrupt(0x10, ax, 0x0, 0x0, 0x0);
+    // if (al == 0xd) interrupt(0x10, 0xe*0x100+10, 0x0, 0x0);
+    ++string;
+  }
+
+  return;
+}
+
+void readString(char *string)
+{
+
+  int ptr = 0;
+  char ch = 0x0;
+
+  while (1)
+  {
+    ch = interrupt(0x16, 0x0, 0x0, 0x0, 0x0);
+    if (ch == 0xd)
+      break; //jika user menekan tombol enter
+    if (ch == 0x8)
+    {
+      if (ptr > 0)
+      {
+        interrupt(0x10, 0xe * 0x100 + ch, 0x0, 0x0, 0x0);
+        interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
+        interrupt(0x10, 0xe * 0x100 + ch, 0x0, 0x0, 0x0);
+        --ptr;
+      }
+      else
+        continue;
+    }
+    else
+    {
+      if( ch == 0x0 ){
+        interrupt(0x10, 0xe * 0x100 + 0x41, 0x0, 0x0, 0x0);
+      }else{
+        string[ptr++] = ch;
+        interrupt(0x10, 0xe * 0x100 + ch, 0x0, 0x0, 0x0);
+      }
+    }
+  }
+}
+
 int div(int a, int b)
 {
   return a / b;
@@ -64,6 +119,122 @@ void readSector(char *buffer, int sector)
 void writeSector(char *buffer, int sector)
 {
   interrupt(0x13, 0x301, buffer, div(sector, 36) * 0x100 + mod(sector, 18) + 1, mod(div(sector, 18), 2) * 0x100);
+}
+
+void deleteFile(char *path, int *sectors, char parentIndex){
+  char map[512];
+  char files[512 * 2];
+  char sectors[512];
+
+  int i,j,k,l,m;
+  int beda;
+
+  int sama;
+  int cnt;
+  int sect;
+  int entryIndex;
+  int idxParent;
+  char parent[14];
+  char filename[14];
+  readSector(map, 256);
+  readSector(files, 257);
+  readSector(files + 512, 258);
+  readSector(sectors, 259);
+
+  for(i = 0;i<14;i++){
+    parent[i] = 0x0;
+    filename[i] = 0x0;
+  }
+
+  // mengambil current file name dan current parent name
+  j = 0;
+  i = 0;
+  idxParent = parentIndex;
+  while(path[i] != 0x0){
+    if(path[i] != '/'){
+      filename[j++] = path[i];
+    }else{
+      for(; j < 14; j++){
+        filename[j] = 0x0;
+      }
+      j = 0;
+      for(k = 0;k<14;k++){
+        parent[k] = filename[k];
+      }
+      for(l = 0;l < 64;l++){
+        if(files[l*16 + 1] == 0xFF){
+          beda = 0;
+          for(m = 0;m<14;m++){
+            if(files[l*16 + 2 + m] != parent[m]){
+              beda = 1;
+              break;
+            }
+          }
+
+          if(beda) continue;
+
+          if(files[l*16] == idxParent){
+            idxParent = files[l*16];
+          }else{
+            *sectors = -1;
+            printString("File tidak ditemukan\n");
+            return;
+          }
+        }
+      }
+    }
+    i++;
+  }
+
+  // pad with 0
+  for(;j<14;j++){
+    filename[j] = 0x0;
+  }
+
+  // mencari apakah ada file yang sama
+  sama = 0;
+  for(i = 0;i<64;i++){
+    if(files[i*16 + 1] != 0xFF && files[i*16] == idxParent){
+      beda = 0;
+      for(j = 0;j<14;j++){
+        if(files[i*16 + 2 + j] != filename[j]){
+          beda = 1;
+          break;
+        }
+      }
+      if(beda) continue;
+
+      sama = 1;
+      entryIndex = files[i*16 + 1];
+      // hapus entri pada files
+      for(k = 0;k<16;k++){
+        files[i*16 + k] = 0x0;
+      }
+      break;
+    }
+  }
+
+  if(!sama){
+    *sectors = -1;
+    printString("Tidak ada file yang memenuhi!\n");
+    return;
+  }
+
+  // hapus entri pada sectors dan map
+  for(i = 0;i<16;i++){
+    sect = sectors[entryIndex*16 + i];
+    sectors[entryIndex*16 + i] = 0x0;
+    if(sect == 0){
+      break;
+    }
+
+    map[sect] = 0x0;
+  }
+
+  writeSector(map, 256);
+  writeSector(files, 257);
+  writeSector(files + 512, 258);
+  writeSector(sectors, 259);
 }
 
 void writeFile(char *buffer, char *path, int *sectors, char parentIndex) {
