@@ -85,32 +85,42 @@ void bacaInput(char* buff, char* curDir){
 				
 		}
 		else if(stat == 'T'){
-			int i,j,count = 0;
+			int i,j,k,count = 0;
 			char candidates[16][14];
 			char same, comp;
-			int last, flg;
+			int last, flg,lastpred;
 			char nama[14];
 			char pred[14];
 
+			for(i = 0;i<14;i++){
+				nama[i] = 0x0;
+				pred[i] = 0x0;
+			}
+			for(i = 0;i<16;i++){
+				for(j = 0;j<14;j++){
+					candidates[i][j] = 0x0;
+				}
+			}
 			j=0;
+			lastpred = 0;
 			for(i=0; buff[i]!='\0';i++){
 				if(buff[i]!=' '){
 					pred[j] = buff[i];
 					j++;
+					lastpred = j;
 				}
 				else{
 					pred[0] = '\0';
 					j=0;
+					lastpred=0;
 				}
 			}
-
+			pred[lastpred] = '\0';
 			for(i = 0;i<64;i++){ // Traverse di sini
-<<<<<<< HEAD
-				
-				if(files[i*16 + 2] != 0x0 && files[i*16] == curDir[0]){
-=======
+				for(j = 0;j<14;j++){
+					nama[j] = 0x0;
+				}
 				if(files[i*16 + 2] != 0x0 && files[i*16]==curDir[0]){
->>>>>>> 34af8514e45d143964685e3f36ee5fc5ccb94a84
 					for(j = 0;j<14 && files[i*16 + 2 + j] != 0x0;j++){
 						nama[j] = files[i*16 + 2 + j];
 					}
@@ -122,8 +132,8 @@ void bacaInput(char* buff, char* curDir){
 			}
 			flg =0;
 			for(i=0;i<14;i++){
-				comp=candidates[0][i];
 				for(j=0;j<count;j++){
+					comp=buff[i];
 					if(candidates[j][i]=='\0'){
 						flg = 1;
 						break;
@@ -136,24 +146,24 @@ void bacaInput(char* buff, char* curDir){
 			}
 
 			last = -1;
-			for(i = 0;buff[i]!= 0x0;i++){
-				last = i;
+			for(k = 0;buff[k]!= 0x0;k++){
+				last = k;
 			}
 			if(last != -1){
-				for(i=0;i<=last;i++){
+				for(k=0;k<=last;k++){
 					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
 					interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
 					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
 				}
 			}
-			// Ubah buff nya
-			for(j=0;j<i;j++){
-				buff[j+last+1] = candidates[0][j];
+
+			for(k=0;k<i;k++){
+				buff[k+last+1] = candidates[j][k+last+1];
 			}
-			buff[j] = '\0';
+			
+			buff[k] = '\0';
 			//nge print
 			printString(buff);
-			stat = '\0';
 		}
 	}
 
