@@ -111,7 +111,7 @@ void bacaInput(char* buff, char* curDir){
 
 			for(i = 0;i<64;i++){ // Traverse di sini
 				
-				if(files[i*16 + 2] != 0x0){
+				if(files[i*16 + 2] != 0x0 && files[i*16] == curDir[0]){
 					for(j = 0;j<14 && files[i*16 + 2 + j] != 0x0;j++){
 						nama[j] = files[i*16 + 2 + j];
 					}

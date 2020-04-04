@@ -21,9 +21,16 @@ void printString(char *string)
 void readString(char *string)
 {
   int ptr = 0;
+  int i;
   char ch = 0x0;
   stat = '\0';
 
+  i = 0;
+  while(string[i] != 0x0){
+    ptr++;
+    i++;
+  }
+  
   while (1)
   {
     ch = interrupt(0x16, 0x0, 0x0, 0x0, 0x0);

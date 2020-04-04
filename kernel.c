@@ -40,13 +40,14 @@ int parentCopy = 0xFF;
 void main()
 {
   int *success;
-  char com[20];
+  char com[50];
   char bufferCopy[512*16];
   char curDir = 0xff;
   int i;
   // char stat = 0x0;
   for(i = 0;i<50;i++){
     filename1[i] = 0x0;
+    com[i] = 0x0;
   }
   makeInterrupt21();
 
