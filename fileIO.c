@@ -129,6 +129,7 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   char parent[14];
   char filename[14];
   char idxParent;
+  char entry[2];
 
   readSector(map, 256);
   readSector(files, 257);
@@ -142,7 +143,7 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   
   // mengambil current file name dan current parent name
   j = 0;
-  for(i = 0 ;i < sizeof(path); i++){
+  for(i = 0 ;path[i]!=0x0; i++){
     if(path[i] != '/'){
       filename[j++] = path[i];
     }else{
@@ -165,7 +166,7 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
   if(parent[0] != 0x0){
     for(i = 0;i<64;i++){
       if(files[i*16 + 1] == 0xFF){
-        int beda = 0;
+        beda = 0;
         for(j = 0;j<14;j++){
           if(files[i*16 + 2 + j] != parent[j]){
             beda = 1;
@@ -249,13 +250,14 @@ void writeFile(char *buffer, char *path, int *sectors, char parentIndex){
     return;
   }
 
+  
   files[entryFile*16] = idxParent;
   files[entryFile*16 + 1] = entryIndex;
 
-  for(i = 0; i<14;i++){
-    files[entryFile*16 + 2 + i] = filename[j];
+  for(i = 0; i<14 ;i++){
+    files[entryFile*16 + 2 + i] = filename[i];
   }
-
+  
   // mengisi sector yang kosong pada sectors dengan indeks entryIndex;
   j = 0;
   i = 0;
@@ -386,5 +388,5 @@ void readFile(char *buffer, char *path, int *result, char parentIndex){
   }
 
   *result = 1;
-  printString("File berhasil dimuat!\n");
+  //printString("File berhasil dimuat!\n");
 }

@@ -29,12 +29,16 @@ char absPath[100];
 
 extern char stat;
 int delete = 0;
+int copy = 0;
 char filename1[50];
+char pathParams1[14];
+char pathParams2[14];
 
 void main()
 {
   int *success;
   char com[20];
+  char bufferCopy[512*16];
   char curDir = 0xff;
   int i;
   // char stat = 0x0;
@@ -81,6 +85,11 @@ void main()
             filename1[i] = 0x0;
           }
           delete = 0;
+        }
+        if(copy){
+          readFile(bufferCopy, pathParams1, success, curDir);
+          writeFile(bufferCopy, pathParams2, success, curDir);
+          copy = 0;
         }
         printString("\n\r");
         printString("bapak_imba@fny_os:");
