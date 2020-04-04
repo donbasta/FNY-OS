@@ -233,14 +233,17 @@ void bacaInput(char* buff, char* curDir){
 				// printNumber(curDir);
 
 				for(i=0; i<64; i++){
+					if(files[i*16] != curDir[0]){
+						continue;
+					}
 					// if(files[i*16] == curDir && files[i*16+2] != 0x0){
 					// 	printString(pathParams1);
-						if(cekNamaFile(files, pathParams1, i) == 1) {
-							idx1 = i;
-						}
-						if (cekNamaFile(files, pathParams2, i) == 1) {
-							idx2 = i;
-						}
+					if(cekNamaFile(files, pathParams1, i) == 1) {
+						idx1 = i;
+					}
+					if (cekNamaFile(files, pathParams2, i) == 1) {
+						idx2 = i;
+					}
 					// }
 				}
 
@@ -331,14 +334,17 @@ void bacaInput(char* buff, char* curDir){
 				idx2 = -1;
 
 				for(i=0; i<64; i++){
+					if(files[i*16] != curDir[0]){
+						continue;
+					}
 					// if(files[i*16] == curDir && files[i*16+2] != 0x0){
 					// 	printString(pathParams1);
-						if(cekNamaFile(files, pathParams1, i) == 1) {
-							idx1 = i;
-						}
-						if (cekNamaFile(files, pathParams2, i) == 1) {
-							idx2 = i;
-						}
+					if(cekNamaFile(files, pathParams1, i) == 1) {
+						idx1 = i;
+					}
+					if (cekNamaFile(files, pathParams2, i) == 1) {
+						idx2 = i;
+					}
 					// }
 				}
 
