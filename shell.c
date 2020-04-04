@@ -16,6 +16,8 @@ extern char pathParams1[14];
 extern char pathParams2[14];
 extern char filename1[50];
 extern int move;
+extern int parentCopy;
+extern int pindahFolder;
 
 void bacaInput(char* buff, char* curDir){
 
@@ -322,7 +324,9 @@ void bacaInput(char* buff, char* curDir){
 						} else if(files[idx1*16+1] == 0xff && files[idx2*16+1] != 0xff){
 							printString("Tidak bisa melakukan mv dari folder ke file, gomennasai\n\r");
 						} else if(files[idx1*16+1] != 0xff && files[idx2*16+1] == 0xff){
-							files[idx1*16] = idx2;
+							parentCopy = idx2;
+							pindahFolder = 1;
+							copy = 1;
 						} else {
 							delete=1;
 							
