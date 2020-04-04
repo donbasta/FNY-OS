@@ -88,10 +88,10 @@ void bacaInput(char* buff, char* curDir){
 			int i,j,k,count = 0;
 			char candidates[16][14];
 			char same, comp;
-			int last, flg,lastpred;
+			int last, flg,lastpred,lastSpace;
 			char nama[14];
 			char pred[14];
-
+			lastSpace = -1;
 			for(i = 0;i<14;i++){
 				nama[i] = 0x0;
 				pred[i] = 0x0;
@@ -110,7 +110,10 @@ void bacaInput(char* buff, char* curDir){
 					lastpred = j;
 				}
 				else{
-					pred[0] = '\0';
+					for(j = 0;j<14;j++){
+						pred[j] = 0x0;
+					}
+					lastSpace = i;
 					j=0;
 					lastpred=0;
 				}
@@ -133,7 +136,7 @@ void bacaInput(char* buff, char* curDir){
 			flg =0;
 			for(i=0;i<14;i++){
 				for(j=0;j<count;j++){
-					comp=buff[i];
+					comp=pred[i];
 					if(candidates[j][i]=='\0'){
 						flg = 1;
 						break;
@@ -156,12 +159,11 @@ void bacaInput(char* buff, char* curDir){
 					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
 				}
 			}
-
+ 
 			for(k=0;k<i;k++){
-				buff[k+last+1] = candidates[j][k+last+1];
+				buff[k+lastSpace+1] = candidates[j][k];
 			}
-			
-			buff[k] = '\0';
+			buff[i+lastSpace+1] = '\0';
 			//nge print
 			printString(buff);
 		}
