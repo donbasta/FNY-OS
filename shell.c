@@ -86,19 +86,16 @@ void bacaInput(char* buff, char* curDir){
 			int i,j,count = 0;
 			char candidates[16][14];
 			char same, comp;
-			char files[512 * 2];
 			int last;
-
-			readSector(files, 257);
-			readSector(files + 512,258);
-
+			char nama[14];
+			
 			last = -1;
 			for(i = 0;buff[i]!= 0x0;i++){
 				last = i;
 			}
 
 			for(i = 0;i<64;i++){ // Traverse di sini
-				char nama[14];
+				
 				if(files[i*16 + 2] != 0x0){
 					for(j = 0;j<14 && files[i*16 + 2 + j] != 0x0;j++){
 						nama[j] = files[i*16 + 2 + j];

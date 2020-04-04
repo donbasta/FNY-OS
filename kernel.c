@@ -67,16 +67,19 @@ void main()
 
       printString("\n\n\r");
       printString("Selamat datang di shell v.0.1\n\r");
-      printString("fny_os@bapak_imba:");
-      printString("/");
-      printString("$ ");
 
       curDir = 0xff;
 
       while(1){
         // interrupt(0x21,1,buff,0,0);
-        for(i = 0; i<100; i++){
-          buff[i] = 0x0;
+        if(stat == '\0'){
+          for(i = 0; i<100; i++){
+            buff[i] = 0x0;
+          }
+          printString("\n\r");
+          printString("bapak_imba@fny_os:");
+          generatePath(curDir);
+          printString("$ ");
         }
         readString(buff);
         bacaInput(buff, &curDir);
@@ -99,10 +102,7 @@ void main()
           writeFile(bufferCopy, pathParams2, success, curDir);
           copy = 0;
         }
-        printString("\n\r");
-        printString("bapak_imba@fny_os:");
-        generatePath(curDir);
-        printString("$ ");
+
         // printNumber(curDir);
       }
   }
