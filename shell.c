@@ -88,7 +88,7 @@ void bacaInput(char* buff, char* curDir){
 			int i,j,count = 0;
 			char candidates[16][14];
 			char same, comp;
-			int last;
+			int last, flg;
 			char nama[14];
 			char pred[14];
 
@@ -103,26 +103,25 @@ void bacaInput(char* buff, char* curDir){
 					j=0;
 				}
 			}
-			
-			last = -1;
-			for(i = 0;buff[i]!= 0x0;i++){
-				last = i;
-			}
 
 			for(i = 0;i<64;i++){ // Traverse di sini
+<<<<<<< HEAD
 				
 				if(files[i*16 + 2] != 0x0 && files[i*16] == curDir[0]){
+=======
+				if(files[i*16 + 2] != 0x0 && files[i*16]==curDir[0]){
+>>>>>>> 34af8514e45d143964685e3f36ee5fc5ccb94a84
 					for(j = 0;j<14 && files[i*16 + 2 + j] != 0x0;j++){
 						nama[j] = files[i*16 + 2 + j];
 					}
-				}
-				if(samePrefix(pred, nama)==1){
-					copyStr(nama, candidates[count]);
-					count++;
+					if(samePrefix(pred, nama)==1){
+						copyStr(nama, candidates[count]);
+						count++;
+					}
 				}
 			}
+			flg =0;
 			for(i=0;i<14;i++){
-				int flg = 0;
 				comp=candidates[0][i];
 				for(j=0;j<count;j++){
 					if(candidates[j][i]=='\0'){
@@ -135,21 +134,26 @@ void bacaInput(char* buff, char* curDir){
 				if(flg==1)
 					break;
 			}
+
+			last = -1;
+			for(i = 0;buff[i]!= 0x0;i++){
+				last = i;
+			}
 			if(last != -1){
-				while(last >= 0){
+				for(i=0;i<=last;i++){
 					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
 					interrupt(0x10, 0xe * 0x100 + 32, 0x0, 0x0, 0x0);
 					interrupt(0x10, 0xe * 0x100 + 0x8, 0x0, 0x0, 0x0);
-					last--;
 				}
 			}
 			// Ubah buff nya
 			for(j=0;j<i;j++){
-				buff[j] = candidates[0][j];
+				buff[j+last+1] = candidates[0][j];
 			}
 			buff[j] = '\0';
 			//nge print
 			printString(buff);
+			stat = '\0';
 		}
 	}
 
