@@ -80,9 +80,15 @@ void main()
         readString(buff);
         bacaInput(buff, &curDir);
         if(delete){
-          deleteFile(filename1,success,curDir);
-          for(i = 0;i<50;i++){
-            filename1[i] = 0x0;
+          if(copy){
+            deleteFile(pathParams2, success, curDir);
+          }
+          else{
+            deleteFile(filename1,success,curDir);
+            for(i = 0;i<50;i++){
+              filename1[i] = 0x0;
+            }
+            
           }
           delete = 0;
         }
