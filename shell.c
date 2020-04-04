@@ -15,6 +15,7 @@ extern int copy;
 extern char pathParams1[14];
 extern char pathParams2[14];
 extern char filename1[50];
+extern int move;
 
 void bacaInput(char* buff, char* curDir){
 
@@ -161,8 +162,6 @@ void bacaInput(char* buff, char* curDir){
 
 		else if(buff[0]=='m'&&buff[1]=='v'){
 
-			char pathParams1[20];
-			char pathParams2[20];
 			int idx1, idx2;
 			int sect;
 
@@ -245,7 +244,8 @@ void bacaInput(char* buff, char* curDir){
 							for(j=0; j<14; j++){
 								files[idx1*16+j+2] = pathParams2[j];
 							}
-							deleteFile(pathParams2, &sect, curDir);
+							delete = 1;
+							move = 1;
 							// for(j=0; j<16; j++){
 							// 	files[]
 							// }

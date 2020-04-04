@@ -30,6 +30,7 @@ char absPath[100];
 extern char stat;
 int delete = 0;
 int copy = 0;
+int move = 0;
 char filename1[50];
 char pathParams1[14];
 char pathParams2[14];
@@ -80,8 +81,9 @@ void main()
         readString(buff);
         bacaInput(buff, &curDir);
         if(delete){
-          if(copy){
+          if(copy || move){
             deleteFile(pathParams2, success, curDir);
+            move = 0;
           }
           else{
             deleteFile(filename1,success,curDir);
